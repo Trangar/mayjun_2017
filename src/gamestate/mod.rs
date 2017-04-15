@@ -1,13 +1,11 @@
 mod iter;
-mod iter_mut;
 
 use cards::{Card, ResourceType};
 use card_wrapper::CardWrapper;
 use point::Point;
 
+pub use self::iter::{CardIterator, CardIteratorMut};
 pub use std::rc::{Rc, Weak};
-pub use self::iter_mut::*;
-pub use self::iter::*;
 
 pub struct GameState {
     pub player: Player,
@@ -30,19 +28,11 @@ impl GameState {
     }
 
     pub fn iter(&self) -> CardIterator {
-        CardIterator {
-            gamestate: self,
-            state: CardIteratorState::PlayerHand,
-            index: 0,
-        }
+        CardIterator::new(self)
     }
 
     pub fn iter_mut(&mut self) -> CardIteratorMut {
-        CardIteratorMut {
-            gamestate: self,
-            state: CardIteratorState::PlayerHand,
-            index: 0,
-        }
+        CardIteratorMut::new(self)
     }
 
     pub fn update_card_origins(&mut self, screen_size: &Point) {

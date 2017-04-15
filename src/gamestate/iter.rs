@@ -1,73 +1,60 @@
 use super::{CardWrapper, GameState};
+use std::slice::{Iter, IterMut};
 
 pub struct CardIterator<'a> {
-    pub gamestate: &'a GameState,
-    pub state: CardIteratorState,
-    pub index: usize,
+    player_hand: Iter<'a, CardWrapper>,
+    player_field: Iter<'a, CardWrapper>,
+    opponent_hand: Iter<'a, CardWrapper>,
+    opponent_field: Iter<'a, CardWrapper>,
+}
+
+impl<'a> CardIterator<'a> {
+    pub fn new(state: &'a GameState) -> CardIterator<'a> {
+        CardIterator {
+            player_hand: state.player.hand.iter(),
+            player_field: state.player.field.iter(),
+            opponent_hand: state.opponent.hand.iter(),
+            opponent_field: state.opponent.field.iter(),
+        }
+    }
 }
 
 impl<'a> Iterator for CardIterator<'a> {
     type Item = &'a CardWrapper;
     fn next(&mut self) -> Option<Self::Item> {
-        if let CardIteratorState::PlayerHand = self.state {
-            if self.index <
-               self.gamestate
-                   .player
-                   .hand
-                   .len() {
-                let ref val = self.gamestate.player.hand[self.index];
-                self.index += 1;
-                return Some(val);
-            }
-            self.state = CardIteratorState::PlayerField;
-            self.index = 0;
-        }
-        if let CardIteratorState::PlayerField = self.state {
-            if self.index <
-               self.gamestate
-                   .player
-                   .field
-                   .len() {
-                let ref val = self.gamestate.player.field[self.index];
-                self.index += 1;
-                return Some(val);
-            }
-            self.state = CardIteratorState::OpponentHand;
-            self.index = 0;
-        }
-        if let CardIteratorState::OpponentHand = self.state {
-            if self.index <
-               self.gamestate
-                   .opponent
-                   .hand
-                   .len() {
-                let ref val = self.gamestate.opponent.hand[self.index];
-                self.index += 1;
-                return Some(val);
-            }
-            self.state = CardIteratorState::OpponentField;
-            self.index = 0;
-        }
-        if let CardIteratorState::OpponentField = self.state {
-            if self.index <
-               self.gamestate
-                   .opponent
-                   .field
-                   .len() {
-                let ref val = self.gamestate.opponent.field[self.index];
-                self.index += 1;
-                return Some(val);
-            }
-            self.state = CardIteratorState::Done;
-        }
-        None
+        self.player_hand
+            .next()
+            .or_else(|| self.player_field.next())
+            .or_else(|| self.opponent_hand.next())
+            .or_else(|| self.opponent_field.next())
     }
 }
 
-pub enum CardIteratorState {
-    PlayerHand,
-    PlayerField,
-    OpponentHand,
-    OpponentField,
-    Done,
+pub struct CardIteratorMut<'a> {
+    player_hand: IterMut<'a, CardWrapper>,
+    player_field: IterMut<'a, CardWrapper>,
+    opponent_hand: IterMut<'a, CardWrapper>,
+    opponent_field: IterMut<'a, CardWrapper>,
+}
+
+impl<'a> CardIteratorMut<'a> {
+    pub fn new(state: &'a mut GameState) -> CardIteratorMut<'a> {
+        CardIteratorMut {
+            player_hand: state.player.hand.iter_mut(),
+            player_field: state.player.field.iter_mut(),
+            opponent_hand: state.opponent.hand.iter_mut(),
+            opponent_field: state.opponent.field.iter_mut(),
+        }
+    }
+}
+
+impl<'a> Iterator for CardIteratorMut<'a> {
+    type Item = &'a mut CardWrapper;
+    fn next(&mut self) -> Option<Self::Item> {
+        self.player_hand
+            .next()
+            .or_else(|| self.player_field.next())
+            .or_else(|| self.opponent_hand.next())
+            .or_else(|| self.opponent_field.next())
+    }
 }
