@@ -1,4 +1,9 @@
+#![cfg_attr(debug_assertions, allow(dead_code))]
+#![cfg_attr(not(debug_assertions), deny(dead_code))]
+
+extern crate glium_text;
 extern crate itertools;
+#[macro_use]
 extern crate bitflags;
 #[macro_use]
 extern crate glium;
@@ -9,9 +14,10 @@ use glium::glutin::{Event, ElementState, MouseButton, VirtualKeyCode, WindowBuil
 use glium::{Display, DisplayBuild, Surface};
 use itertools::Itertools;
 
-mod card_graphics;
 mod render_state;
 mod card_wrapper;
+//mod gamestate;
+mod cards;
 mod point;
 
 pub const CARD_WIDTH: f32 = 286.0;
@@ -38,24 +44,31 @@ fn main() {
         .build_glium()
         .unwrap();
 
+    let text_system = glium_text::TextSystem::new(&display);
+    let font =
+        glium_text::FontTexture::new(&display, std::fs::File::open("assets/Arial.ttf").unwrap(), 24)
+            .unwrap();
+
     let (vertex_buffer, indices) = render_state::RenderState::generate_buffers(&display);
 
     let program = glium::Program::from_source(&display,
                                               include_str!("../assets/2d_texture_shader.vert"),
                                               include_str!("../assets/2d_texture_shader.frag"),
                                               None)
-        .unwrap();
+            .unwrap();
 
     let mut last_frame_time = time::precise_time_s();
 
-    let graphics = card_graphics::CardGraphics::new(&display,
-                                                    &include_bytes!("../assets/264.png")[..]);
+    // let graphics = card_graphics::CardGraphics::new(&display,
+    //                                                 &include_bytes!("../assets/264.png")[..]);
 
     let mut cards = Vec::new();
-    cards.push(card_wrapper::CardWrapper::new(&graphics));
-    cards.push(card_wrapper::CardWrapper::new(&graphics));
-    cards.push(card_wrapper::CardWrapper::new(&graphics));
-    cards.push(card_wrapper::CardWrapper::new(&graphics));
+    cards.push(card_wrapper::CardWrapper::new(Box::new(cards::LightElemental { health: 10 })));
+    cards.push(card_wrapper::CardWrapper::new(Box::new(cards::LightElemental { health: 10 })));
+    cards.push(card_wrapper::CardWrapper::new(Box::new(cards::LightElemental { health: 10 })));
+    cards.push(card_wrapper::CardWrapper::new(Box::new(cards::LightElemental { health: 10 })));
+    cards.push(card_wrapper::CardWrapper::new(Box::new(cards::LightElemental { health: 10 })));
+    cards.push(card_wrapper::CardWrapper::new(Box::new(cards::LightElemental { health: 10 })));
 
     let mut mouse_position = point::Point::zero();
 
@@ -131,15 +144,18 @@ fn main() {
 
         {
             let mut render_state = render_state::RenderState {
+                window: &display,
                 frame: &mut frame,
                 screen_dimensions: &screen_size,
                 vertex_buffer: &vertex_buffer,
                 program: &program,
                 indices: &indices,
+                text_system: &text_system,
+                font: &font,
             };
 
-            for card in &cards {
-                card.graphics.render(&card.position(), &mut render_state);
+            for card in &mut cards {
+                card.draw(&mut render_state);
             }
         }
 

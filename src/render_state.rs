@@ -1,14 +1,18 @@
+use glium::{Display, Frame, Program, VertexBuffer};
 use glium::index::{NoIndices, PrimitiveType};
-use glium::{Frame, Program, VertexBuffer};
+use glium_text::{TextSystem, FontTexture};
 use glium::backend::Facade;
 use point::Point;
 
 pub struct RenderState<'a> {
+    pub window: &'a Display,
     pub frame: &'a mut Frame,
     pub screen_dimensions: &'a Point,
     pub vertex_buffer: &'a VertexBuffer<Vertex>,
     pub indices: &'a NoIndices,
     pub program: &'a Program,
+    pub text_system: &'a TextSystem,
+    pub font: &'a FontTexture,
 }
 
 impl<'a> RenderState<'a> {
