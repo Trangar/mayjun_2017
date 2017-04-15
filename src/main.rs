@@ -22,7 +22,7 @@ fn update_card_origins(cards: &mut Vec<card_wrapper::CardWrapper>, screen_size: 
     let left_card = point::Point::new((screen_size.x / 2f32) -
                                       (cards.len() as f32 * CARD_IN_HAND_SPACING / 2f32) -
                                       CARD_WIDTH / 2f32,
-                                      screen_size.y - CARD_HEIGHT);
+                                      screen_size.y - CARD_HEIGHT / 2f32);
     for i in 0..cards.len() {
         cards[i].set_position(left_card + (CARD_IN_HAND_SPACING * i as f32, 0.0).into());
     }
