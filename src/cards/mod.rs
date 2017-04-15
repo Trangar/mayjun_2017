@@ -1,5 +1,4 @@
 pub use std::rc::{Rc, Weak};
-use glium::backend::Facade;
 
 mod buff_card;
 mod generic_minion;
@@ -54,23 +53,5 @@ bitflags! {
         const TARGET_OWNMINION      = 0b0100,
         const TARGET_OPPONENTMINION = 0b1000,
         const TARGET_EVERYTHING     = TARGET_SELF.bits | TARGET_OPPONENT.bits | TARGET_OWNMINION.bits | TARGET_OPPONENTMINION.bits
-    }
-}
-
-
-pub struct CardWrapper {
-    pub card: Weak<Card>,
-    //pub texture: Texture2d,
-    pub position: (f32, f32),
-    pub size: (f32, f32),
-}
-
-impl CardWrapper {
-    pub fn new(card: Weak<Card>, _display: &mut Facade) -> CardWrapper {
-        CardWrapper {
-            card: card,
-            position: (0.0, 0.0),
-            size: (0.0, 0.0)
-        }
     }
 }

@@ -1,5 +1,6 @@
 #![cfg_attr(debug_assertions, allow(dead_code))]
 #![cfg_attr(not(debug_assertions), deny(dead_code))]
+#![feature(conservative_impl_trait)]
 
 extern crate glium_text;
 extern crate itertools;
@@ -13,26 +14,16 @@ extern crate time;
 use glium::glutin::{Event, ElementState, MouseButton, VirtualKeyCode, WindowBuilder};
 use glium::{Display, DisplayBuild, Surface};
 use itertools::Itertools;
+use std::rc::Rc;
 
 mod render_state;
 mod card_wrapper;
-//mod gamestate;
+mod gamestate;
 mod cards;
 mod point;
 
 pub const CARD_WIDTH: f32 = 286.0;
 pub const CARD_HEIGHT: f32 = 395.0;
-pub const CARD_IN_HAND_SPACING: f32 = 100.0;
-
-fn update_card_origins(cards: &mut Vec<card_wrapper::CardWrapper>, screen_size: &point::Point) {
-    let left_card = point::Point::new((screen_size.x / 2f32) -
-                                      (cards.len() as f32 * CARD_IN_HAND_SPACING / 2f32) -
-                                      CARD_WIDTH / 2f32,
-                                      screen_size.y - CARD_HEIGHT / 2f32);
-    for i in 0..cards.len() {
-        cards[i].set_position(left_card + (CARD_IN_HAND_SPACING * i as f32, 0.0).into());
-    }
-}
 
 fn main() {
     let mut screen_size = point::Point::new(1024f32, 800f32);
@@ -45,8 +36,9 @@ fn main() {
         .unwrap();
 
     let text_system = glium_text::TextSystem::new(&display);
-    let font =
-        glium_text::FontTexture::new(&display, std::fs::File::open("assets/Arial.ttf").unwrap(), 24)
+    let font = glium_text::FontTexture::new(&display,
+                                            std::fs::File::open("assets/Arial.ttf").unwrap(),
+                                            24)
             .unwrap();
 
     let (vertex_buffer, indices) = render_state::RenderState::generate_buffers(&display);
@@ -59,20 +51,17 @@ fn main() {
 
     let mut last_frame_time = time::precise_time_s();
 
-    // let graphics = card_graphics::CardGraphics::new(&display,
-    //                                                 &include_bytes!("../assets/264.png")[..]);
-
-    let mut cards = Vec::new();
-    cards.push(card_wrapper::CardWrapper::new(Box::new(cards::LightElemental { health: 10 })));
-    cards.push(card_wrapper::CardWrapper::new(Box::new(cards::LightElemental { health: 10 })));
-    cards.push(card_wrapper::CardWrapper::new(Box::new(cards::LightElemental { health: 10 })));
-    cards.push(card_wrapper::CardWrapper::new(Box::new(cards::LightElemental { health: 10 })));
-    cards.push(card_wrapper::CardWrapper::new(Box::new(cards::LightElemental { health: 10 })));
-    cards.push(card_wrapper::CardWrapper::new(Box::new(cards::LightElemental { health: 10 })));
+    let mut game_state = gamestate::GameState {
+        player: gamestate::Player::new("Trangar"),
+        opponent: gamestate::Player::new("ubsan"),
+    };
 
     let mut mouse_position = point::Point::zero();
 
-    update_card_origins(&mut cards, &screen_size);
+    game_state.player.original_deck.push(Rc::new(cards::LightElemental { health: 10 }));
+    game_state.player.hand.push(card_wrapper::CardWrapper::new(Rc::downgrade(&game_state.player.original_deck[0])));
+
+    game_state.update_card_origins(&screen_size);
 
     'mainLoop: loop {
         for event in display.poll_events() {
@@ -82,7 +71,7 @@ fn main() {
                 }
                 Event::MouseMoved(x, y) => {
                     mouse_position = (x, y).into();
-                    for card in &mut cards {
+                    for card in game_state.iter_mut() {
                         if card.dragging {
                             card.mouse_moved(mouse_position);
                         }
@@ -90,10 +79,10 @@ fn main() {
                 }
                 Event::Resized(x, y) => {
                     screen_size = (x, y).into();
-                    update_card_origins(&mut cards, &screen_size);
+                    game_state.update_card_origins(&screen_size);
                 }
                 Event::MouseInput(ElementState::Pressed, MouseButton::Left) => {
-                    for card in cards.iter_mut().sorted_by(|c1, c2| {
+                    for card in game_state.iter_mut().sorted_by(|c1, c2| {
                         use std::cmp::Ordering;
                         let c1_position = c1.position();
                         let c2_position = c2.position();
@@ -112,7 +101,7 @@ fn main() {
                     }
                 }
                 Event::MouseInput(ElementState::Released, _) => {
-                    for card in &mut cards {
+                    for card in game_state.iter_mut() {
                         card.drag_end();
                     }
                 }
@@ -135,7 +124,7 @@ fn main() {
         let diff = ((current_time - last_frame_time) * 1_000.0) as f32;
         last_frame_time = current_time;
 
-        for card in &mut cards {
+        for card in game_state.iter_mut() {
             card.update(diff);
         }
 
@@ -154,7 +143,7 @@ fn main() {
                 font: &font,
             };
 
-            for card in &mut cards {
+            for card in game_state.iter_mut() {
                 card.draw(&mut render_state);
             }
         }

@@ -3,6 +3,7 @@ use glium::framebuffer::SimpleFrameBuffer;
 use glium::texture::Texture2d;
 use render_state::RenderState;
 use glium_text::TextDisplay;
+use std::rc::Weak;
 use point::Point;
 
 const BOUNCE_BACK_FACTOR: f32 = 0.005f32;
@@ -14,11 +15,11 @@ pub struct CardWrapper {
     pub dragging: bool,
     pub drag_offset: Point,
     pub texture: Option<Texture2d>,
-    pub card: Box<::cards::Card>,
+    pub card: Weak<::cards::Card>,
 }
 
 impl CardWrapper {
-    pub fn new(card: Box<::cards::Card>) -> CardWrapper {
+    pub fn new(card: Weak<::cards::Card>) -> CardWrapper {
         CardWrapper {
             position: Point::zero(),
             current_position: Point::zero(),
@@ -81,33 +82,35 @@ impl CardWrapper {
                                false,
                                None,
                                None);
+            if let Some(ref card) = self.card.upgrade() {
 
-            let text = TextDisplay::new(render_state.text_system,
-                                        render_state.font,
-                                        self.card.name());
-            let matrix = [[0.1, 0.0, 0.0, 0.0],
-                          [0.0, 0.075, 0.0, 0.0],
-                          [0.0, 0.0, 0.1, 0.0],
-                          [-0.95, 0.9, 0.0, 1.0]];
-            ::glium_text::draw(&text,
-                               &render_state.text_system,
-                               &mut frame_buffer,
-                               matrix,
-                               (0.0, 0.0, 0.0, 1.0));
-            let mut y = 0.7;
-            for line in self.card.description().lines() {
-
-                let text = TextDisplay::new(render_state.text_system, render_state.font, line);
+                let text = TextDisplay::new(render_state.text_system,
+                                            render_state.font,
+                                            card.name());
                 let matrix = [[0.1, 0.0, 0.0, 0.0],
-                              [0.0, 0.075, 0.0, 0.0],
-                              [0.0, 0.0, 0.1, 0.0],
-                              [-0.95, y, 0.0, 1.0]];
+                            [0.0, 0.075, 0.0, 0.0],
+                            [0.0, 0.0, 0.1, 0.0],
+                            [-0.95, 0.9, 0.0, 1.0]];
                 ::glium_text::draw(&text,
-                                   &render_state.text_system,
-                                   &mut frame_buffer,
-                                   matrix,
-                                   (0.0, 0.0, 0.0, 1.0));
-                y -= 0.1;
+                                &render_state.text_system,
+                                &mut frame_buffer,
+                                matrix,
+                                (0.0, 0.0, 0.0, 1.0));
+                let mut y = 0.7;
+                for line in card.description().lines() {
+
+                    let text = TextDisplay::new(render_state.text_system, render_state.font, line);
+                    let matrix = [[0.1, 0.0, 0.0, 0.0],
+                                [0.0, 0.075, 0.0, 0.0],
+                                [0.0, 0.0, 0.1, 0.0],
+                                [-0.95, y, 0.0, 1.0]];
+                    ::glium_text::draw(&text,
+                                    &render_state.text_system,
+                                    &mut frame_buffer,
+                                    matrix,
+                                    (0.0, 0.0, 0.0, 1.0));
+                    y -= 0.1;
+                }
             }
         }
 
