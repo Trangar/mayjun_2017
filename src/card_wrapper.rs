@@ -3,8 +3,10 @@ use glium::framebuffer::SimpleFrameBuffer;
 use glium::texture::Texture2d;
 use render_state::RenderState;
 use glium_text::TextDisplay;
+use std::cell::RefCell;
 use std::rc::Weak;
 use point::Point;
+use std::fmt;
 
 const BOUNCE_BACK_FACTOR: f32 = 0.005f32;
 
@@ -15,11 +17,35 @@ pub struct CardWrapper {
     pub dragging: bool,
     pub drag_offset: Point,
     pub texture: Option<Texture2d>,
-    pub card: Weak<::cards::Card>,
+    pub card: Weak<RefCell<::cards::Card>>,
+}
+
+pub struct PlayArguments {
+    pub position: Option<u8>,
+    pub additional_target: Option<Weak<RefCell<CardWrapper>>>,
+}
+
+impl fmt::Debug for PlayArguments {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        /*if let Some(ref target) = self.additional_target {
+            if let Some(wrapper) = Weak::upgrade(target) {
+                if let Some(card) = Weak::upgrade(&wrapper.card) {
+                    return write!(f, "PlayArguments(position: {:?}, card: {:?})", self.position, card);
+                }
+            }
+        }*/
+        write!(f, "PlayArguments(position: {:?}, card: None)", self.position)
+    }
+}
+
+#[derive(Debug)]
+pub enum DragResponse {
+    Nothing,
+    Play(PlayArguments),
 }
 
 impl CardWrapper {
-    pub fn new(card: Weak<::cards::Card>) -> CardWrapper {
+    pub fn new(card: Weak<RefCell<::cards::Card>>) -> CardWrapper {
         CardWrapper {
             position: Point::zero(),
             current_position: Point::zero(),
@@ -44,16 +70,17 @@ impl CardWrapper {
         p.between(&self.position, &(self.current_position + self.size()))
     }
 
-    pub fn drag_start(&mut self, mouse_position: Point) {
+    pub fn drag_start(&mut self, mouse_position: &Point) {
         self.dragging = true;
-        self.drag_offset = self.current_position - mouse_position;
+        self.drag_offset = self.current_position - *mouse_position;
     }
-    pub fn drag_end(&mut self) {
+    pub fn drag_end(&mut self) -> DragResponse {
         self.dragging = false;
+        DragResponse::Nothing
     }
 
-    pub fn mouse_moved(&mut self, mouse_position: Point) {
-        self.current_position = self.drag_offset + mouse_position;
+    pub fn mouse_moved(&mut self, mouse_position: &Point) {
+        self.current_position = self.drag_offset + *mouse_position;
     }
 
     pub fn update(&mut self, delta_time: f32) {
@@ -86,7 +113,7 @@ impl CardWrapper {
 
                 let text = TextDisplay::new(render_state.text_system,
                                             render_state.font,
-                                            card.name());
+                                            card.borrow().name());
                 let matrix = [[0.1, 0.0, 0.0, 0.0],
                             [0.0, 0.075, 0.0, 0.0],
                             [0.0, 0.0, 0.1, 0.0],
@@ -97,7 +124,7 @@ impl CardWrapper {
                                 matrix,
                                 (0.0, 0.0, 0.0, 1.0));
                 let mut y = 0.7;
-                for line in card.description().lines() {
+                for line in card.borrow().description().lines() {
 
                     let text = TextDisplay::new(render_state.text_system, render_state.font, line);
                     let matrix = [[0.1, 0.0, 0.0, 0.0],
