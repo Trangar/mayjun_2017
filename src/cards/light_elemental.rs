@@ -1,5 +1,6 @@
 use super::{Card, ResourceType};
 
+#[derive(Clone, Copy)]
 pub struct LightElemental {
     pub health: u8
 }
@@ -17,5 +18,8 @@ impl Card for LightElemental {
         vec![
             (ResourceType::White, 2)
         ]
+    }
+    fn clone_box(&self) -> Box<Card> {
+        Box::new(self.clone())
     }
 }

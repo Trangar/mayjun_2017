@@ -1,5 +1,6 @@
 use super::{Card, CardPlayEffect, ResourceType, TARGET_EVERYTHING};
 
+#[derive(Clone, Copy)]
 pub struct DamageSpellCard {
 
 }
@@ -14,5 +15,8 @@ impl Card for DamageSpellCard {
         vec![
             (ResourceType::Red, 2)
         ]
+    }
+    fn clone(&self) -> Self {
+        Clone::clone(self)
     }
 }

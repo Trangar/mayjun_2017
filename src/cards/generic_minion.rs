@@ -8,10 +8,18 @@ pub struct GenericMinion {
 }
 
 impl Card for GenericMinion {
-    fn name(&self) -> &str { &self.name }
-    fn attack(&self) -> Option<&u8> { Some(&self.attack) }
-    fn health(&self) -> Option<&u8> { Some(&self.health) }
-    fn health_mut(&mut self) -> Option<&mut u8> { Some(&mut self.health) }
+    fn name(&self) -> &str {
+        &self.name
+    }
+    fn attack(&self) -> Option<&u8> {
+        Some(&self.attack)
+    }
+    fn health(&self) -> Option<&u8> {
+        Some(&self.health)
+    }
+    fn health_mut(&mut self) -> Option<&mut u8> {
+        Some(&mut self.health)
+    }
     fn debug_text(&self) -> String {
         format!("{} ({}/{})", self.name(), self.attack, self.health)
     }

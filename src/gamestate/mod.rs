@@ -1,24 +1,29 @@
 // mod iter;
 mod player;
 
-use cards::{Card, ResourceType};
 use card_wrapper::CardWrapper;
 use point::Point;
 
 // pub use self::iter::{CardIterator, CardIteratorMut};
 pub use self::player::Player;
 pub use std::rc::{Rc, Weak};
-use std::cell::RefCell;
-use std::ops::DerefMut;
 
 pub struct GameState {
     pub player: Player,
     pub opponent: Player,
-    pub dragging_card: Option<::MutableWeak<CardWrapper>>,
+    pub dragging_card: Option<CardReference>,
+}
+
+#[derive(Debug)]
+pub enum CardReference {
+    PlayerHand(usize),
+    PlayerField(usize),
+    OpponentHand(usize),
+    OpponentField(usize),
 }
 
 impl GameState {
-    fn update_positions_of_list(list: &Vec<::MutableRc<CardWrapper>>,
+    fn update_positions_of_list(list: &mut Vec<CardWrapper>,
                                 position_y: f32,
                                 screen_size: &Point) {
         pub const CARD_IN_HAND_SPACING: f32 = 100.0;
@@ -28,19 +33,30 @@ impl GameState {
                                    ::CARD_WIDTH / 2f32,
                                    position_y);
         
-        for ref mut card in list.iter().map(|c| RefCell::borrow_mut(c)) {
-            card.deref_mut().set_position(position);
+        for card in list.iter_mut() {
+            card.set_position(position);
             position.x += CARD_IN_HAND_SPACING;
         }
     }
 
-    // pub fn iter(&self) -> CardIterator {
-    //     CardIterator::new(self)
-    // }
+    pub fn get_card(&self, reference: &CardReference) -> Option<&CardWrapper> {
+        match *reference {
+            CardReference::PlayerHand(index) => self.player.hand.get(index),
+            CardReference::PlayerField(index) => self.player.field.get(index),
+            CardReference::OpponentHand(index) => self.opponent.hand.get(index),
+            CardReference::OpponentField(index) => self.opponent.field.get(index),
+        }
+    }
 
-    // pub fn iter_mut(&mut self) -> CardIteratorMut {
-    //     CardIteratorMut::new(self)
-    // }
+    pub fn get_card_mut(&mut self, reference: &CardReference) -> Option<&mut CardWrapper> {
+        match *reference {
+            CardReference::PlayerHand(index) => self.player.hand.get_mut(index),
+            CardReference::PlayerField(index) => self.player.field.get_mut(index),
+            CardReference::OpponentHand(index) => self.opponent.hand.get_mut(index),
+            CardReference::OpponentField(index) => self.opponent.field.get_mut(index),
+        }
+    }
+
 
     pub fn update_card_origins(&mut self, screen_size: &Point) {
         GameState::update_positions_of_list(&mut self.player.hand,
@@ -52,20 +68,30 @@ impl GameState {
     }
 
     pub fn mouse_moved_to(&mut self, mouse_position: &Point) {
-        // if let Some(ref wrapper) = self.dragging_card {
-        //     if let Some(wrapper) = Weak::upgrade(wrapper) {
-        //         wrapper.mouse_moved(mouse_position);
-        //     }
-        // }
+        if let Some(reference) = self.dragging_card.take() {
+            if let Some(ref mut cardwrapper) = self.get_card_mut(&reference){
+                cardwrapper.mouse_moved(mouse_position);
+            }
+            self.dragging_card = Some(reference);
+        }
     }
 
     pub fn mouse_pressed_at(&mut self, mouse_position: &Point) {
-        // for card in self.player.hand.iter_mut().rev() {
-        //     if card.contains(&mouse_position) {
-        //         card.drag_start(mouse_position);
-        //         self.dragging_card = Some(Rc::downgrade(&card));
-        //         break;
-        //     }
-        // }
+        for (index, ref mut card) in self.player.hand.iter_mut().rev().enumerate() {
+            if card.contains(&mouse_position) {
+                card.drag_start(mouse_position);
+                self.dragging_card = Some(CardReference::PlayerHand(index));
+                break;
+            }
+        }
+    }
+
+    pub fn mouse_released(&mut self) {
+        if let Some(reference) = self.dragging_card.take() {
+            if let Some(ref mut cardwrapper) = self.get_card_mut(&reference){
+                println!("Released card at {:?}", cardwrapper.drag_position());
+                cardwrapper.dragging = false;
+            }
+        }
     }
 }

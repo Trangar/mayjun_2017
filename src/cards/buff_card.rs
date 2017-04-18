@@ -1,5 +1,6 @@
 use super::{Card, CardPlayEffect, ResourceType, TARGET_OWNMINION, TARGET_OPPONENTMINION};
 
+#[derive(Clone, Copy)]
 pub struct BuffCard {
 
 }
@@ -14,5 +15,8 @@ impl Card for BuffCard {
         vec![
             (ResourceType::White, 1)
         ]
+    }
+    fn clone(&self) -> Self {
+        Clone::clone(self)
     }
 }

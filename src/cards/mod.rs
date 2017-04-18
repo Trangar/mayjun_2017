@@ -1,15 +1,14 @@
 pub use std::rc::{Rc, Weak};
 
-mod buff_card;
-mod generic_minion;
-mod generic_spell;
+// mod buff_card;
+// mod generic_minion;
+// mod generic_spell;
 mod light_elemental;
 
-pub use self::buff_card::*;
-pub use self::generic_minion::*;
-pub use self::generic_spell::*;
+// pub use self::buff_card::*;
+// pub use self::generic_minion::*;
+// pub use self::generic_spell::*;
 pub use self::light_elemental::*;
-use std::fmt;
 
 pub trait Card {
     fn name(&self) -> &str;
@@ -24,12 +23,8 @@ pub trait Card {
     fn debug_text(&self) -> String {
         self.name().to_string()
     }
-}
 
-impl fmt::Debug for Card {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{} ({:?}) {:?}", self.debug_text(), self.play_effects(), self.description())
-    }
+    fn clone_box(&self) -> Box<Card>;
 }
 
 #[derive(Debug, Clone, Copy)]

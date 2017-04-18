@@ -13,8 +13,6 @@ extern crate time;
 
 use glium::glutin::{Event, ElementState, MouseButton, VirtualKeyCode, WindowBuilder};
 use glium::{Display, DisplayBuild, Surface};
-use std::rc::{Rc, Weak};
-use std::cell::RefCell;
 
 mod render_state;
 mod card_wrapper;
@@ -22,14 +20,11 @@ mod gamestate;
 mod cards;
 mod point;
 
-pub type MutableRc<T> = Rc<RefCell<T>>;
-pub type MutableWeak<T> = Weak<RefCell<T>>;
-
-pub const CARD_WIDTH: f32 = 286.0;
-pub const CARD_HEIGHT: f32 = 395.0;
+pub const CARD_WIDTH: f32 = 150.0;
+pub const CARD_HEIGHT: f32 = 200.0;
 
 fn main() {
-    let mut screen_size = point::Point::new(1024f32, 800f32);
+    let mut screen_size = point::Point::new(1280.0, 960.0);
 
     let display: Display = WindowBuilder::new()
         .with_vsync()
@@ -42,7 +37,7 @@ fn main() {
     let font = glium_text::FontTexture::new(&display,
                                             std::fs::File::open("assets/Arial.ttf").unwrap(),
                                             24)
-            .unwrap();
+        .unwrap();
 
     let (vertex_buffer, indices) = render_state::RenderState::generate_buffers(&display);
 
@@ -50,7 +45,7 @@ fn main() {
                                               include_str!("../assets/2d_texture_shader.vert"),
                                               include_str!("../assets/2d_texture_shader.frag"),
                                               None)
-            .unwrap();
+        .unwrap();
 
     let mut last_frame_time = time::precise_time_s();
 
@@ -62,10 +57,12 @@ fn main() {
 
     let mut mouse_position = point::Point::zero();
 
-    game_state.player.original_deck.push(Rc::new(RefCell::new(cards::LightElemental { health: 10 })));
     game_state.player
-        .hand
-        .push(Rc::new(RefCell::new(card_wrapper::CardWrapper::new(Rc::downgrade(&game_state.player.original_deck[0])))));
+        .original_deck
+        .push(Box::new(cards::LightElemental { health: 10 }));
+
+    game_state.player.reset_deck();
+    game_state.player.draw_card();
 
     game_state.update_card_origins(&screen_size);
 
@@ -88,21 +85,7 @@ fn main() {
                     game_state.mouse_pressed_at(&mouse_position);
                 }
                 Event::MouseInput(ElementState::Released, _) => {
-                    while let Some(cardwrapper) =
-                        game_state.player
-                            .hand
-                            .iter()
-                            .find(|c| c.borrow().dragging) {
-                        use card_wrapper::DragResponse;
-                        if let Some(card) = std::rc::Weak::upgrade(&cardwrapper.borrow().card) {
-                            match cardwrapper.borrow_mut().drag_end() {
-                                DragResponse::Nothing => {}
-                                DragResponse::Play(args) => {
-                                    println!("Playing card {:?}: {:?}", card, args);
-                                }
-                            }
-                        }
-                    }
+                    game_state.mouse_released();
                 }
                 Event::KeyboardInput(ElementState::Pressed, _, Some(key)) => {
                     match key {
@@ -123,9 +106,9 @@ fn main() {
         let diff = ((current_time - last_frame_time) * 1_000.0) as f32;
         last_frame_time = current_time;
 
-        // for card in game_state.iter_mut() {
-        //     card.update(diff);
-        // }
+        for card in game_state.player.hand.iter_mut() {
+            card.update(diff);
+        }
 
         let mut frame = display.draw();
         frame.clear_color(0.0, 0.0, 1.0, 1.0);
@@ -142,9 +125,9 @@ fn main() {
                 font: &font,
             };
 
-            // for card in game_state.iter_mut() {
-            //     card.draw(&mut render_state);
-            // }
+            for card in &mut game_state.player.hand {
+                card.draw(&mut render_state);
+            }
         }
 
         frame.finish().unwrap();
