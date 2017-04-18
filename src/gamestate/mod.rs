@@ -14,7 +14,7 @@ pub struct GameState {
     pub dragging_card: Option<CardReference>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub enum CardReference {
     PlayerHand(usize),
     PlayerField(usize),
@@ -68,20 +68,29 @@ impl GameState {
     }
 
     pub fn mouse_moved_to(&mut self, mouse_position: &Point) {
-        if let Some(reference) = self.dragging_card.take() {
+        if let Some(reference) = self.dragging_card {
             if let Some(ref mut cardwrapper) = self.get_card_mut(&reference){
                 cardwrapper.mouse_moved(mouse_position);
             }
-            self.dragging_card = Some(reference);
         }
     }
 
     pub fn mouse_pressed_at(&mut self, mouse_position: &Point) {
+        let hand_length = self.player.hand.len();
         for (index, ref mut card) in self.player.hand.iter_mut().rev().enumerate() {
             if card.contains(&mouse_position) {
                 card.drag_start(mouse_position);
-                self.dragging_card = Some(CardReference::PlayerHand(index));
-                break;
+                self.dragging_card = Some(CardReference::PlayerHand(hand_length - index - 1));
+                return;
+            }
+        }
+        
+        let field_length = self.player.field.len();
+        for (index, ref mut card) in self.player.field.iter_mut().rev().enumerate() {
+            if card.contains(&mouse_position) {
+                card.drag_start(mouse_position);
+                self.dragging_card = Some(CardReference::PlayerField(field_length - index - 1));
+                return;
             }
         }
     }
@@ -89,7 +98,7 @@ impl GameState {
     pub fn mouse_released(&mut self) {
         if let Some(reference) = self.dragging_card.take() {
             if let Some(ref mut cardwrapper) = self.get_card_mut(&reference){
-                println!("Released card at {:?}", cardwrapper.drag_position());
+                println!("Released card {:?} ({:?}) at {:?}", cardwrapper.card.debug_text(), reference, cardwrapper.drag_position());
                 cardwrapper.dragging = false;
             }
         }

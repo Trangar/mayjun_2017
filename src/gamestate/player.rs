@@ -43,4 +43,10 @@ impl Player {
         let card = self.deck.remove(index);
         self.hand.push(CardWrapper::new(card));
     }
+
+    pub fn draw_and_play_card(&mut self) {
+        let index = 0;
+        let card = self.deck.remove(index);
+        self.field.push(CardWrapper::new(card));
+    }
 }

@@ -57,12 +57,19 @@ fn main() {
 
     let mut mouse_position = point::Point::zero();
 
-    game_state.player
-        .original_deck
-        .push(Box::new(cards::LightElemental { health: 10 }));
+    for _ in 0..60 {
+        game_state.player
+            .original_deck
+            .push(Box::new(cards::LightElemental { health: 10 }));
+    }
 
     game_state.player.reset_deck();
-    game_state.player.draw_card();
+    for _ in 0..5 {
+        game_state.player.draw_card();
+    }
+    for _ in 0..5 {
+        game_state.player.draw_and_play_card();
+    }
 
     game_state.update_card_origins(&screen_size);
 
@@ -110,6 +117,10 @@ fn main() {
             card.update(diff);
         }
 
+        for card in game_state.player.field.iter_mut() {
+            card.update(diff);
+        }
+
         let mut frame = display.draw();
         frame.clear_color(0.0, 0.0, 1.0, 1.0);
 
@@ -127,6 +138,15 @@ fn main() {
 
             for card in &mut game_state.player.hand {
                 card.draw(&mut render_state);
+            }
+            for card in &mut game_state.player.field {
+                card.draw(&mut render_state);
+            }
+
+            if let Some(reference) = game_state.dragging_card {
+                if let Some(ref mut card) = game_state.get_card_mut(&reference) {
+                    card.draw(&mut render_state);
+                }
             }
         }
 
