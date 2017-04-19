@@ -76,10 +76,18 @@ impl GameState {
 
     pub fn insert_card_at(&mut self, cardwrapper: CardWrapper, reference: &CardReference) -> bool {
         match reference.area {
-            AreaReference::PlayerHand => self.player.hand.push_or_insert(reference.index, cardwrapper),
-            AreaReference::PlayerField => self.player.field.push_or_insert(reference.index, cardwrapper),
-            AreaReference::OpponentHand => self.opponent.hand.push_or_insert(reference.index, cardwrapper),
-            AreaReference::OpponentField => self.opponent.field.push_or_insert(reference.index, cardwrapper),
+            AreaReference::PlayerHand => {
+                self.player.hand.push_or_insert(reference.index, cardwrapper)
+            }
+            AreaReference::PlayerField => {
+                self.player.field.push_or_insert(reference.index, cardwrapper)
+            }
+            AreaReference::OpponentHand => {
+                self.opponent.hand.push_or_insert(reference.index, cardwrapper)
+            }
+            AreaReference::OpponentField => {
+                self.opponent.field.push_or_insert(reference.index, cardwrapper)
+            }
         }
     }
 
@@ -138,12 +146,21 @@ impl GameState {
         }
     }
 
+    fn get_card_index(cards: &[CardWrapper], mouse_x: f32) -> usize {
+        for (index, card) in cards.iter().enumerate() {
+            if card.position().x > mouse_x {
+                return index;
+            }
+        }
+        cards.len()
+    }
+
     fn get_area_from_point(&self, point: &Point, screen_size: &Point) -> Option<CardReference> {
         let y_factor = point.y / screen_size.y;
         if y_factor > 0.5 && y_factor < 0.7 {
             Some(CardReference {
                      area: AreaReference::PlayerField,
-                     index: self.player.field.len(),
+                     index: GameState::get_card_index(&self.player.field, point.x),
                  })
         } else {
             println!("Y factor: {:?} ({:?} / {:?})",
@@ -157,7 +174,7 @@ impl GameState {
     fn play_card_from_hand(&mut self,
                            start_position: &CardReference,
                            target_position: &CardReference) {
-        if let Some(cardwrapper) = self.take_card_at(start_position){
+        if let Some(cardwrapper) = self.take_card_at(start_position) {
             if !self.insert_card_at(cardwrapper, target_position) {
                 println!("Could not insert card at {:?}", target_position);
             }
