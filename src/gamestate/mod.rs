@@ -1,6 +1,6 @@
-mod iter;
-mod player;
 mod positioning;
+mod player;
+mod iter;
 
 use constants::{CARD_HEIGHT, CARD_IN_HAND_SPACING, CARD_ON_FIELD_SPACING};
 use card_wrapper::CardWrapper;

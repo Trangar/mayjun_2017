@@ -1,22 +1,30 @@
 pub use std::rc::{Rc, Weak};
 
-// mod buff_card;
-// mod generic_minion;
-// mod generic_spell;
 mod light_elemental;
+mod generic_minion;
+mod generic_spell;
+mod buff_card;
 
-// pub use self::buff_card::*;
-// pub use self::generic_minion::*;
-// pub use self::generic_spell::*;
 pub use self::light_elemental::*;
+pub use self::generic_minion::*;
+pub use self::generic_spell::*;
+pub use self::buff_card::*;
 
 pub trait Card {
     fn name(&self) -> &str;
-    fn description(&self) -> &str { "" }
+    fn description(&self) -> &str {
+        ""
+    }
     fn cost(&self) -> Vec<(ResourceType, u8)>;
-    fn attack(&self) -> Option<&u8> { None }
-    fn health(&self) -> Option<&u8> { None }
-    fn health_mut(&mut self) -> Option<&mut u8> { None }
+    fn attack(&self) -> Option<&u8> {
+        None
+    }
+    fn health(&self) -> Option<&u8> {
+        None
+    }
+    fn health_mut(&mut self) -> Option<&mut u8> {
+        None
+    }
     fn play_effects(&self) -> Vec<CardPlayEffect> {
         vec![CardPlayEffect::SummonMinion]
     }
@@ -32,7 +40,7 @@ pub enum ResourceType {
     Red,
     Blue,
     White,
-    Black
+    Black,
 }
 
 #[derive(Debug)]
