@@ -1,6 +1,7 @@
 use glium::{Display, Frame, Program, VertexBuffer};
 use glium::index::{NoIndices, PrimitiveType};
 use glium_text::{TextSystem, FontTexture};
+use constants::{CARD_WIDTH, CARD_HEIGHT};
 use glium::backend::Facade;
 use point::Point;
 
@@ -20,7 +21,7 @@ impl<'a> RenderState<'a> {
 
         let vertex1 = Vertex {
             // bottom left
-            position: [0.0, ::CARD_HEIGHT],
+            position: [0.0, CARD_HEIGHT],
             tex_coords: [0.0, 0.0],
         };
         let vertex2 = Vertex {
@@ -30,12 +31,12 @@ impl<'a> RenderState<'a> {
         };
         let vertex3 = Vertex {
             // bottom right
-            position: [::CARD_WIDTH, ::CARD_HEIGHT],
+            position: [CARD_WIDTH, CARD_HEIGHT],
             tex_coords: [1.0, 0.0],
         };
         let vertex4 = Vertex {
             // top right
-            position: [::CARD_WIDTH, 0.0],
+            position: [CARD_WIDTH, 0.0],
             tex_coords: [1.0, 1.0],
         };
         let shape = vec![vertex1, vertex2, vertex3, vertex2, vertex3, vertex4];

@@ -1,35 +1,20 @@
 mod iter;
 mod player;
+mod positioning;
 
+use constants::{CARD_HEIGHT, CARD_IN_HAND_SPACING, CARD_ON_FIELD_SPACING};
 use card_wrapper::CardWrapper;
 use utils::VecUtils;
 use point::Point;
 
-// pub use self::iter::{CardIterator, CardIteratorMut};
+pub use self::positioning::{AreaReference, CardReference};
 pub use self::player::Player;
-pub use std::rc::{Rc, Weak};
 
 pub struct GameState {
     pub player: Player,
     pub opponent: Player,
     pub dragging_card: Option<CardReference>,
 }
-
-#[derive(Debug, Clone, Copy)]
-pub enum AreaReference {
-    PlayerHand,
-    PlayerField,
-    OpponentHand,
-    OpponentField,
-}
-
-#[derive(Debug, Clone, Copy)]
-pub struct CardReference {
-    pub area: AreaReference,
-    pub index: usize,
-}
-pub const CARD_IN_HAND_SPACING: f32 = 100.0;
-pub const CARD_ON_FIELD_SPACING: f32 = 175.0;
 
 impl GameState {
     fn update_positions_of_list(list: &mut Vec<CardWrapper>,
@@ -93,11 +78,11 @@ impl GameState {
 
     pub fn update_card_origins(&mut self, screen_size: &Point) {
         GameState::update_positions_of_list(&mut self.player.hand,
-                                            screen_size.y - ::CARD_HEIGHT / 2f32,
+                                            screen_size.y - CARD_HEIGHT / 2f32,
                                             CARD_IN_HAND_SPACING,
                                             screen_size);
         GameState::update_positions_of_list(&mut self.player.field,
-                                            (screen_size.y + ::CARD_HEIGHT) / 2f32,
+                                            (screen_size.y + CARD_HEIGHT) / 2f32,
                                             CARD_ON_FIELD_SPACING,
                                             screen_size);
     }
@@ -111,39 +96,57 @@ impl GameState {
     }
 
     pub fn mouse_pressed_at(&mut self, mouse_position: &Point) {
-        let hand_length = self.player.hand.len();
-        for (index, ref mut card) in
-            self.player
-                .hand
-                .iter_mut()
-                .rev()
-                .enumerate() {
-            if card.contains(mouse_position) {
-                card.drag_start(mouse_position);
-                self.dragging_card = Some(CardReference {
-                                              area: AreaReference::PlayerHand,
-                                              index: hand_length - index - 1,
-                                          });
-                return;
+        let mut lists = [
+            (&mut self.player.hand.iter_mut(), AreaReference::PlayerHand),
+            (&mut self.player.field.iter_mut(), AreaReference::PlayerField)
+        ];
+        for &mut (ref mut list, area) in &mut lists {
+            let length = list.len();
+            for (index, ref mut card) in list.rev().enumerate() {
+                if card.contains(mouse_position) {
+                    card.drag_start(mouse_position);
+                    self.dragging_card = Some(CardReference {
+                                                area: area,
+                                                index: length - index - 1,
+                                            });
+                    return;
+                }
             }
         }
 
-        let field_length = self.player.field.len();
-        for (index, ref mut card) in
-            self.player
-                .field
-                .iter_mut()
-                .rev()
-                .enumerate() {
-            if card.contains(mouse_position) {
-                card.drag_start(mouse_position);
-                self.dragging_card = Some(CardReference {
-                                              area: AreaReference::PlayerField,
-                                              index: field_length - index - 1,
-                                          });
-                return;
-            }
-        }
+        // let hand_length = self.player.hand.len();
+        // for (index, ref mut card) in
+        //     self.player
+        //         .hand
+        //         .iter_mut()
+        //         .rev()
+        //         .enumerate() {
+        //     if card.contains(mouse_position) {
+        //         card.drag_start(mouse_position);
+        //         self.dragging_card = Some(CardReference {
+        //                                       area: AreaReference::PlayerHand,
+        //                                       index: hand_length - index - 1,
+        //                                   });
+        //         return;
+        //     }
+        // }
+
+        // let field_length = self.player.field.len();
+        // for (index, ref mut card) in
+        //     self.player
+        //         .field
+        //         .iter_mut()
+        //         .rev()
+        //         .enumerate() {
+        //     if card.contains(mouse_position) {
+        //         card.drag_start(mouse_position);
+        //         self.dragging_card = Some(CardReference {
+        //                                       area: AreaReference::PlayerField,
+        //                                       index: field_length - index - 1,
+        //                                   });
+        //         return;
+        //     }
+        // }
     }
 
     fn get_card_index(cards: &[CardWrapper], mouse_x: f32) -> usize {
@@ -181,6 +184,15 @@ impl GameState {
         }
     }
 
+    fn can_play_card_from_hand(&mut self) -> bool {
+        self.player.field.len() < 7
+        // if self.player.field.len() >= 7 {
+        //     false
+        // } else {
+        //     true
+        // }
+    }
+
     pub fn mouse_released(&mut self, screen_size: &Point) {
         let mut position = None;
         if let Some(reference) = self.dragging_card.take() {
@@ -188,14 +200,16 @@ impl GameState {
                 cardwrapper.dragging = false;
                 position = Some(*cardwrapper.drag_position());
             }
-            if let Some(position) = position {
-                if let Some(position) = self.get_area_from_point(&position, screen_size) {
-                    match (reference.area, position.area) {
-                        (AreaReference::PlayerHand, AreaReference::PlayerField) => {
-                            self.play_card_from_hand(&reference, &position);
-                            self.update_card_origins(screen_size);
+            if self.can_play_card_from_hand() {
+                if let Some(position) = position {
+                    if let Some(position) = self.get_area_from_point(&position, screen_size) {
+                        match (reference.area, position.area) {
+                            (AreaReference::PlayerHand, AreaReference::PlayerField) => {
+                                self.play_card_from_hand(&reference, &position);
+                                self.update_card_origins(screen_size);
+                            }
+                            x => println!("Unknown action combination: {:?}", x),
                         }
-                        x => println!("Unknown action combination: {:?}", x),
                     }
                 }
             }

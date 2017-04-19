@@ -17,12 +17,10 @@ use glium::{Display, DisplayBuild, Surface};
 mod render_state;
 mod card_wrapper;
 mod gamestate;
+mod constants;
 mod cards;
 mod point;
 mod utils;
-
-pub const CARD_WIDTH: f32 = 150.0;
-pub const CARD_HEIGHT: f32 = 200.0;
 
 fn main() {
     let mut screen_size = point::Point::new(1280.0, 960.0);

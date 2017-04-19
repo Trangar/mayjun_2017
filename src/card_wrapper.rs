@@ -1,12 +1,12 @@
+use constants::{BOUNCE_BACK_FACTOR, CARD_WIDTH, CARD_HEIGHT};
 use glium::{Blend, DrawParameters, Surface, Rect};
 use glium::framebuffer::SimpleFrameBuffer;
+use glium_text::{self, TextDisplay};
 use glium::texture::Texture2d;
 use render_state::RenderState;
 use gamestate::CardReference;
-use glium_text::TextDisplay;
 use point::Point;
-
-const BOUNCE_BACK_FACTOR: f32 = 0.005f32;
+use cards::Card;
 
 pub struct CardWrapper {
     current_position: Point,
@@ -15,7 +15,7 @@ pub struct CardWrapper {
     pub dragging: bool,
     pub drag_offset: Point,
     pub texture: Option<Texture2d>,
-    pub card: Box<::cards::Card>,
+    pub card: Box<Card>,
 }
 
 #[derive(Debug)]
@@ -31,7 +31,7 @@ pub enum DragResponse {
 }
 
 impl CardWrapper {
-    pub fn new(card: Box<::cards::Card>) -> CardWrapper {
+    pub fn new(card: Box<Card>) -> CardWrapper {
         CardWrapper {
             position: Point::zero(),
             current_position: Point::zero(),
@@ -44,7 +44,7 @@ impl CardWrapper {
     }
 
     pub fn size(&self) -> Point {
-        Point::new(::CARD_WIDTH, ::CARD_HEIGHT)
+        Point::new(CARD_WIDTH, CARD_HEIGHT)
     }
     pub fn position(&self) -> &Point {
         &self.current_position
@@ -82,10 +82,8 @@ impl CardWrapper {
     }
 
     fn generate_texture(&self, render_state: &mut RenderState) -> Texture2d {
-        let texture: Texture2d = Texture2d::empty(render_state.window,
-                                                  ::CARD_WIDTH as u32,
-                                                  ::CARD_HEIGHT as u32)
-                .unwrap();
+        let texture: Texture2d =
+            Texture2d::empty(render_state.window, CARD_WIDTH as u32, CARD_HEIGHT as u32).unwrap();
         {
             let mut frame_buffer: SimpleFrameBuffer =
                 SimpleFrameBuffer::new(render_state.window, &texture).unwrap();
@@ -93,8 +91,8 @@ impl CardWrapper {
             frame_buffer.clear(Some(&Rect {
                                          left: 1,
                                          bottom: 1,
-                                         width: ::CARD_WIDTH as u32 - 2,
-                                         height: ::CARD_HEIGHT as u32 - 2,
+                                         width: CARD_WIDTH as u32 - 2,
+                                         height: CARD_HEIGHT as u32 - 2,
                                      }),
                                Some((1.0, 1.0, 1.0, 1.0)),
                                false,
@@ -108,11 +106,11 @@ impl CardWrapper {
                           [0.0, 0.075, 0.0, 0.0],
                           [0.0, 0.0, 0.1, 0.0],
                           [-0.95, 0.9, 0.0, 1.0]];
-            ::glium_text::draw(&text,
-                               render_state.text_system,
-                               &mut frame_buffer,
-                               matrix,
-                               (0.0, 0.0, 0.0, 1.0));
+            glium_text::draw(&text,
+                             render_state.text_system,
+                             &mut frame_buffer,
+                             matrix,
+                             (0.0, 0.0, 0.0, 1.0));
             let mut y = 0.7;
             for line in self.card.description().lines() {
 
@@ -121,11 +119,11 @@ impl CardWrapper {
                               [0.0, 0.075, 0.0, 0.0],
                               [0.0, 0.0, 0.1, 0.0],
                               [-0.95, y, 0.0, 1.0]];
-                ::glium_text::draw(&text,
-                                   render_state.text_system,
-                                   &mut frame_buffer,
-                                   matrix,
-                                   (0.0, 0.0, 0.0, 1.0));
+                glium_text::draw(&text,
+                                 render_state.text_system,
+                                 &mut frame_buffer,
+                                 matrix,
+                                 (0.0, 0.0, 0.0, 1.0));
                 y -= 0.1;
             }
         }
@@ -140,7 +138,7 @@ impl CardWrapper {
         if let Some(ref texture) = self.texture {
             let uniforms = uniform! {
                 screen_dimensions: render_state.screen_dimensions.to_slice(),
-                offset: (self.current_position - Point::from((::CARD_WIDTH, ::CARD_HEIGHT)) / 2f32).to_slice(),
+                offset: (self.current_position - Point::from((CARD_WIDTH, CARD_HEIGHT)) / 2f32).to_slice(),
                 tex: texture,
             };
             render_state.frame
