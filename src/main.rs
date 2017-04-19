@@ -19,6 +19,7 @@ mod card_wrapper;
 mod gamestate;
 mod cards;
 mod point;
+mod utils;
 
 pub const CARD_WIDTH: f32 = 150.0;
 pub const CARD_HEIGHT: f32 = 200.0;
@@ -37,7 +38,7 @@ fn main() {
     let font = glium_text::FontTexture::new(&display,
                                             std::fs::File::open("assets/Arial.ttf").unwrap(),
                                             24)
-        .unwrap();
+            .unwrap();
 
     let (vertex_buffer, indices) = render_state::RenderState::generate_buffers(&display);
 
@@ -45,7 +46,7 @@ fn main() {
                                               include_str!("../assets/2d_texture_shader.vert"),
                                               include_str!("../assets/2d_texture_shader.frag"),
                                               None)
-        .unwrap();
+            .unwrap();
 
     let mut last_frame_time = time::precise_time_s();
 
@@ -58,9 +59,7 @@ fn main() {
     let mut mouse_position = point::Point::zero();
 
     for _ in 0..60 {
-        game_state.player
-            .original_deck
-            .push(Box::new(cards::LightElemental { health: 10 }));
+        game_state.player.original_deck.push(Box::new(cards::LightElemental { health: 10 }));
     }
 
     game_state.player.reset_deck();
@@ -92,18 +91,18 @@ fn main() {
                     game_state.mouse_pressed_at(&mouse_position);
                 }
                 Event::MouseInput(ElementState::Released, _) => {
-                    game_state.mouse_released();
+                    game_state.mouse_released(&screen_size);
                 }
-                Event::KeyboardInput(ElementState::Pressed, _, Some(key)) => {
-                    match key {
-                        _ => {}
-                    }
-                }
-                Event::KeyboardInput(ElementState::Released, _, Some(key)) => {
-                    match key {
-                        _ => {}
-                    }
-                }
+                // Event::KeyboardInput(ElementState::Pressed, _, Some(key)) => {
+                //     match key {
+                //         _ => {}
+                //     }
+                // }
+                // Event::KeyboardInput(ElementState::Released, _, Some(key)) => {
+                //     match key {
+                //         _ => {}
+                //     }
+                // }
                 Event::Closed => break 'mainLoop,
                 _ => {}
             };
@@ -113,11 +112,11 @@ fn main() {
         let diff = ((current_time - last_frame_time) * 1_000.0) as f32;
         last_frame_time = current_time;
 
-        for card in game_state.player.hand.iter_mut() {
+        for card in &mut game_state.player.hand {
             card.update(diff);
         }
 
-        for card in game_state.player.field.iter_mut() {
+        for card in &mut game_state.player.field {
             card.update(diff);
         }
 

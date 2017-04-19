@@ -20,6 +20,6 @@ impl Card for LightElemental {
         ]
     }
     fn clone_box(&self) -> Box<Card> {
-        Box::new(self.clone())
+        Box::new(*self)
     }
 }

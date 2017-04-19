@@ -12,9 +12,7 @@ pub struct CardGraphics {
 
 impl CardGraphics {
     pub fn new(display: &Facade, bytes: &[u8]) -> CardGraphics {
-        let image = image::load(Cursor::new(bytes), image::PNG)
-            .unwrap()
-            .to_rgba();
+        let image = image::load(Cursor::new(bytes), image::PNG).unwrap().to_rgba();
 
         let image_dimensions = image.dimensions();
         let image = RawImage2d::from_raw_rgba_reversed(image.into_raw(), image_dimensions);

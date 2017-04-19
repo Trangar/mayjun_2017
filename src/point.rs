@@ -35,7 +35,7 @@ impl Point {
         min.x <= self.x && min.y <= self.y && max.x >= self.x && max.y >= self.y
     }
 
-    pub fn to_slice(&self) -> [f32;2] {
+    pub fn to_slice(&self) -> [f32; 2] {
         [self.x, self.y]
     }
 }

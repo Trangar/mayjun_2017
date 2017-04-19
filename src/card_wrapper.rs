@@ -56,7 +56,9 @@ impl CardWrapper {
         self.position = p;
     }
     pub fn contains(&self, p: &Point) -> bool {
-        p.between(&self.position, &(self.current_position + self.size()))
+        let half_size = self.size() / 2f32;
+        p.between(&(self.position - half_size),
+                  &(self.current_position + half_size))
     }
 
     pub fn drag_start(&mut self, mouse_position: &Point) {
@@ -83,17 +85,17 @@ impl CardWrapper {
         let texture: Texture2d = Texture2d::empty(render_state.window,
                                                   ::CARD_WIDTH as u32,
                                                   ::CARD_HEIGHT as u32)
-            .unwrap();
+                .unwrap();
         {
             let mut frame_buffer: SimpleFrameBuffer =
                 SimpleFrameBuffer::new(render_state.window, &texture).unwrap();
             frame_buffer.clear_color(0.0, 0.0, 0.0, 1.0);
             frame_buffer.clear(Some(&Rect {
-                                   left: 1,
-                                   bottom: 1,
-                                   width: ::CARD_WIDTH as u32 - 2,
-                                   height: ::CARD_HEIGHT as u32 - 2,
-                               }),
+                                         left: 1,
+                                         bottom: 1,
+                                         width: ::CARD_WIDTH as u32 - 2,
+                                         height: ::CARD_HEIGHT as u32 - 2,
+                                     }),
                                Some((1.0, 1.0, 1.0, 1.0)),
                                false,
                                None,
@@ -107,7 +109,7 @@ impl CardWrapper {
                           [0.0, 0.0, 0.1, 0.0],
                           [-0.95, 0.9, 0.0, 1.0]];
             ::glium_text::draw(&text,
-                               &render_state.text_system,
+                               render_state.text_system,
                                &mut frame_buffer,
                                matrix,
                                (0.0, 0.0, 0.0, 1.0));
@@ -120,7 +122,7 @@ impl CardWrapper {
                               [0.0, 0.0, 0.1, 0.0],
                               [-0.95, y, 0.0, 1.0]];
                 ::glium_text::draw(&text,
-                                   &render_state.text_system,
+                                   render_state.text_system,
                                    &mut frame_buffer,
                                    matrix,
                                    (0.0, 0.0, 0.0, 1.0));
@@ -138,7 +140,7 @@ impl CardWrapper {
         if let Some(ref texture) = self.texture {
             let uniforms = uniform! {
                 screen_dimensions: render_state.screen_dimensions.to_slice(),
-                offset: self.current_position.to_slice(),
+                offset: (self.current_position - Point::from((::CARD_WIDTH, ::CARD_HEIGHT)) / 2f32).to_slice(),
                 tex: texture,
             };
             render_state.frame
