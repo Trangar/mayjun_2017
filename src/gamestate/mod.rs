@@ -2,13 +2,14 @@ mod positioning;
 mod player;
 mod iter;
 
-use constants::{CARD_HEIGHT, CARD_IN_HAND_SPACING, CARD_ON_FIELD_SPACING};
-use card_wrapper::CardWrapper;
-use utils::VecUtils;
-use point::Point;
-
 pub use self::positioning::{AreaReference, CardReference};
 pub use self::player::Player;
+
+use constants::{CARD_HEIGHT, CARD_IN_HAND_SPACING, CARD_ON_FIELD_SPACING};
+use card_wrapper::CardWrapper;
+use cards::CardPlayEffect;
+use utils::VecUtils;
+use point::Point;
 
 pub struct GameState {
     pub player: Player,
@@ -95,6 +96,17 @@ impl GameState {
         }
     }
 
+    fn get_card_drag_result(wrapper: &CardWrapper, area: &AreaReference) -> Option<CardPlayEffect> {
+        for effect in wrapper.card.play_effects() {
+            match (effect, area) {
+                (CardPlayEffect::SummonMinion, &AreaReference::PlayerHand) => return Some(CardPlayEffect::SummonMinion),
+                (CardPlayEffect::SummonMinion, _) => {},
+                (x, _) => return Some(x)
+            }
+        }
+        None
+    }
+
     pub fn mouse_pressed_at(&mut self, mouse_position: &Point) {
         let mut lists = [
             (&mut self.player.hand.iter_mut(), AreaReference::PlayerHand),
@@ -104,49 +116,24 @@ impl GameState {
             let length = list.len();
             for (index, ref mut card) in list.rev().enumerate() {
                 if card.contains(mouse_position) {
-                    card.drag_start(mouse_position);
-                    self.dragging_card = Some(CardReference {
-                                                area: area,
-                                                index: length - index - 1,
-                                            });
-                    return;
+                    let position = CardReference {
+                        area: area,
+                        index: length - index - 1 
+                    };
+                    match GameState::get_card_drag_result(&card, &area) {
+                        None => {},
+                        Some(CardPlayEffect::SummonMinion) => {
+                            card.drag_start(mouse_position);
+                            self.dragging_card = Some(position);
+                            return;
+                        },
+                        Some(CardPlayEffect::Target(target)) => {
+                            println!("Card play effect is target {:?}", target);
+                        }
+                    }
                 }
             }
         }
-
-        // let hand_length = self.player.hand.len();
-        // for (index, ref mut card) in
-        //     self.player
-        //         .hand
-        //         .iter_mut()
-        //         .rev()
-        //         .enumerate() {
-        //     if card.contains(mouse_position) {
-        //         card.drag_start(mouse_position);
-        //         self.dragging_card = Some(CardReference {
-        //                                       area: AreaReference::PlayerHand,
-        //                                       index: hand_length - index - 1,
-        //                                   });
-        //         return;
-        //     }
-        // }
-
-        // let field_length = self.player.field.len();
-        // for (index, ref mut card) in
-        //     self.player
-        //         .field
-        //         .iter_mut()
-        //         .rev()
-        //         .enumerate() {
-        //     if card.contains(mouse_position) {
-        //         card.drag_start(mouse_position);
-        //         self.dragging_card = Some(CardReference {
-        //                                       area: AreaReference::PlayerField,
-        //                                       index: field_length - index - 1,
-        //                                   });
-        //         return;
-        //     }
-        // }
     }
 
     fn get_card_index(cards: &[CardWrapper], mouse_x: f32) -> usize {

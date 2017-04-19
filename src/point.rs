@@ -6,6 +6,22 @@ pub struct Point {
     pub y: f32,
 }
 
+impl Point {
+    pub fn new(x: f32, y: f32) -> Point {
+        Point { x: x, y: y }
+    }
+    pub fn zero() -> Point {
+        Point::new(0f32, 0f32)
+    }
+    pub fn between(&self, min: &Point, max: &Point) -> bool {
+        min.x <= self.x && min.y <= self.y && max.x >= self.x && max.y >= self.y
+    }
+
+    pub fn to_slice(&self) -> [f32; 2] {
+        [self.x, self.y]
+    }
+}
+
 impl From<(u32, u32)> for Point {
     fn from(value: (u32, u32)) -> Point {
         Point::new(value.0 as f32, value.1 as f32)
@@ -21,22 +37,6 @@ impl From<(i32, i32)> for Point {
 impl From<(f32, f32)> for Point {
     fn from(value: (f32, f32)) -> Point {
         Point::new(value.0, value.1)
-    }
-}
-
-impl Point {
-    pub fn new(x: f32, y: f32) -> Point {
-        Point { x: x, y: y }
-    }
-    pub fn zero() -> Point {
-        Point::new(0f32, 0f32)
-    }
-    pub fn between(&self, min: &Point, max: &Point) -> bool {
-        min.x <= self.x && min.y <= self.y && max.x >= self.x && max.y >= self.y
-    }
-
-    pub fn to_slice(&self) -> [f32; 2] {
-        [self.x, self.y]
     }
 }
 

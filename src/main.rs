@@ -11,9 +11,6 @@ extern crate glium;
 extern crate image;
 extern crate time;
 
-use glium::glutin::{Event, ElementState, MouseButton, VirtualKeyCode, WindowBuilder};
-use glium::{Display, DisplayBuild, Surface};
-
 mod render_state;
 mod card_wrapper;
 mod gamestate;
@@ -21,6 +18,10 @@ mod constants;
 mod cards;
 mod point;
 mod utils;
+
+use glium::glutin::{Event, ElementState, MouseButton, VirtualKeyCode, WindowBuilder};
+use glium::{Display, DisplayBuild, Surface};
+use cards::ResourceType;
 
 fn main() {
     let mut screen_size = point::Point::new(1280.0, 960.0);
@@ -56,16 +57,21 @@ fn main() {
 
     let mut mouse_position = point::Point::zero();
 
-    for _ in 0..60 {
+    for _ in 0..15 {
         game_state.player.original_deck.push(Box::new(cards::LightElemental { health: 10 }));
+        game_state.player.original_deck.push(Box::new(cards::BuffCard { }));
+        game_state.player.original_deck.push(Box::new(cards::GenericMinion {
+            name: String::from("Generic minion"),
+            attack: 5,
+            health: 5,
+            cost: vec![(ResourceType::Red, 3)]
+        }));
+        game_state.player.original_deck.push(Box::new(cards::DamageSpellCard { }));
     }
 
     game_state.player.reset_deck();
     for _ in 0..5 {
         game_state.player.draw_card();
-    }
-    for _ in 0..5 {
-        game_state.player.draw_and_play_card();
     }
 
     game_state.update_card_origins(&screen_size);
