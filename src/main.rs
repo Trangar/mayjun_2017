@@ -1,6 +1,5 @@
 #![cfg_attr(debug_assertions, allow(dead_code))]
 #![cfg_attr(not(debug_assertions), deny(dead_code))]
-#![feature(conservative_impl_trait)]
 
 extern crate glium_text;
 extern crate itertools;

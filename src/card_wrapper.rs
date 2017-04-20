@@ -51,7 +51,7 @@ impl CardWrapper {
         Point::new(CARD_WIDTH, CARD_HEIGHT)
     }
     /// Gets the current position of the card
-    #[Obsolete(note = "Use drag_position instead")]
+    #[deprecated(note = "Use drag_position instead")]
     pub fn position(&self) -> &Point {
         &self.current_position
     }
