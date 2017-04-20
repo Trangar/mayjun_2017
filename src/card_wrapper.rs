@@ -50,11 +50,6 @@ impl CardWrapper {
     pub fn size(&self) -> Point {
         Point::new(CARD_WIDTH, CARD_HEIGHT)
     }
-    /// Gets the current position of the card
-    #[deprecated(note = "Use drag_position instead")]
-    pub fn position(&self) -> &Point {
-        &self.current_position
-    }
     /// Gets the drag position of the card
     pub fn drag_position(&self) -> &Point {
         &self.current_position
@@ -114,6 +109,7 @@ impl CardWrapper {
                                None,
                                None);
 
+            // TODO: Properly calculate the positions and size of the font
             let text = TextDisplay::new(render_state.text_system,
                                         render_state.font,
                                         self.card.name());

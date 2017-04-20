@@ -185,7 +185,7 @@ impl GameState {
     /// Get the index that the mouse is hovering at, based on the mouse's x position
     fn get_card_index(cards: &[CardWrapper], mouse_x: f32) -> usize {
         for (index, card) in cards.iter().enumerate() {
-            if card.position().x > mouse_x {
+            if card.drag_position().x > mouse_x {
                 return index;
             }
         }

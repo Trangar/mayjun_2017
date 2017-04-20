@@ -1,4 +1,3 @@
-#![cfg_attr(debug_assertions, allow(dead_code))]
 #![cfg_attr(not(debug_assertions), deny(dead_code))]
 
 extern crate glium_text;
@@ -39,17 +38,14 @@ fn main() {
         .unwrap();
 
     let text_system = TextSystem::new(&display);
-    let font = FontTexture::new(&display,
-                                            File::open("assets/Arial.ttf").unwrap(),
-                                            24)
-            .unwrap();
+    let font = FontTexture::new(&display, File::open("assets/arial.ttf").unwrap(), 24).unwrap();
 
     let (vertex_buffer, indices) = RenderState::generate_buffers(&display);
 
     let program = Program::from_source(&display,
-                                              include_str!("../assets/2d_texture_shader.vert"),
-                                              include_str!("../assets/2d_texture_shader.frag"),
-                                              None)
+                                       include_str!("../assets/2d_texture_shader.vert"),
+                                       include_str!("../assets/2d_texture_shader.frag"),
+                                       None)
             .unwrap();
 
     let mut last_frame_time = time::precise_time_s();
@@ -59,14 +55,14 @@ fn main() {
     // Fill a deck with 60 cards, 15 of each type
     for _ in 0..15 {
         game_state.player.original_deck.push(Box::new(cards::LightElemental { health: 10 }));
-        game_state.player.original_deck.push(Box::new(cards::BuffCard { }));
+        game_state.player.original_deck.push(Box::new(cards::BuffCard {}));
         game_state.player.original_deck.push(Box::new(cards::GenericMinion {
-            name: String::from("Generic minion"),
-            attack: 5,
-            health: 5,
-            cost: vec![(ResourceType::Red, 3)]
-        }));
-        game_state.player.original_deck.push(Box::new(cards::DamageSpellCard { }));
+                                                          name: String::from("Generic minion"),
+                                                          attack: 5,
+                                                          health: 5,
+                                                          cost: vec![(ResourceType::Red, 3)],
+                                                      }));
+        game_state.player.original_deck.push(Box::new(cards::DamageSpellCard {}));
     }
 
     game_state.player.reset_deck();
