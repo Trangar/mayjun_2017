@@ -1,5 +1,6 @@
 use super::{Card, CardPlayEffect, ResourceType, TARGET_EVERYTHING};
 
+/// A generic spell that deals 3 damage to a targetted minion or player
 #[derive(Clone, Copy)]
 pub struct DamageSpellCard {}
 

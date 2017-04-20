@@ -1,5 +1,7 @@
 use super::{Card, ResourceType};
 
+/// A minion that only has health
+/// It's attack is always equal to it's health
 #[derive(Clone, Copy)]
 pub struct LightElemental {
     pub health: u8,

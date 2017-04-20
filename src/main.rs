@@ -20,11 +20,17 @@ mod point;
 mod utils;
 
 use glium::glutin::{Event, ElementState, MouseButton, VirtualKeyCode, WindowBuilder};
-use glium::{Display, DisplayBuild, Surface};
+use glium::{Display, DisplayBuild, Surface, Program};
+use glium_text::{TextSystem, FontTexture};
+use gamestate::{GameState, Player};
+use render_state::RenderState;
 use cards::ResourceType;
+use std::fs::File;
+use point::Point;
 
 fn main() {
-    let mut screen_size = point::Point::new(1280.0, 960.0);
+    // Default starting screen size. Will be updated with a resize event only
+    let mut screen_size = Point::new(1280.0, 960.0);
 
     let display: Display = WindowBuilder::new()
         .with_vsync()
@@ -33,30 +39,25 @@ fn main() {
         .build_glium()
         .unwrap();
 
-    let text_system = glium_text::TextSystem::new(&display);
-    let font = glium_text::FontTexture::new(&display,
-                                            std::fs::File::open("assets/Arial.ttf").unwrap(),
+    let text_system = TextSystem::new(&display);
+    let font = FontTexture::new(&display,
+                                            File::open("assets/Arial.ttf").unwrap(),
                                             24)
             .unwrap();
 
-    let (vertex_buffer, indices) = render_state::RenderState::generate_buffers(&display);
+    let (vertex_buffer, indices) = RenderState::generate_buffers(&display);
 
-    let program = glium::Program::from_source(&display,
+    let program = Program::from_source(&display,
                                               include_str!("../assets/2d_texture_shader.vert"),
                                               include_str!("../assets/2d_texture_shader.frag"),
                                               None)
             .unwrap();
 
     let mut last_frame_time = time::precise_time_s();
+    let mut game_state = GameState::new(Player::new("Trangar"), Player::new("ubsan"));
+    let mut mouse_position = Point::zero();
 
-    let mut game_state = gamestate::GameState {
-        player: gamestate::Player::new("Trangar"),
-        opponent: gamestate::Player::new("ubsan"),
-        dragging_card: None,
-    };
-
-    let mut mouse_position = point::Point::zero();
-
+    // Fill a deck with 60 cards, 15 of each type
     for _ in 0..15 {
         game_state.player.original_deck.push(Box::new(cards::LightElemental { health: 10 }));
         game_state.player.original_deck.push(Box::new(cards::BuffCard { }));
@@ -112,10 +113,13 @@ fn main() {
             };
         }
 
+        // Calculate the time between now and the previous frame time
         let current_time = time::precise_time_s();
         let diff = ((current_time - last_frame_time) * 1_000.0) as f32;
         last_frame_time = current_time;
 
+        // TODO: Make this more efficient so we don't have to update all lists one by one
+        // Maybe use Vec.chain
         for card in &mut game_state.player.hand {
             card.update(diff);
         }
@@ -128,7 +132,10 @@ fn main() {
         frame.clear_color(0.0, 0.0, 1.0, 1.0);
 
         {
-            let mut render_state = render_state::RenderState {
+            // Create a render state that will be passed to all cards
+            // This needs to be in a nested block because it has a reference to frame
+            // and we're discarding frame with frame.finish() before this goes out of scope
+            let mut render_state = RenderState {
                 window: &display,
                 frame: &mut frame,
                 screen_dimensions: &screen_size,
@@ -146,6 +153,9 @@ fn main() {
                 card.draw(&mut render_state);
             }
 
+            // If we're dragging a card, draw it again so it's always on the top
+            // This does mean we're drawing it twice
+            // TODO: see if the check of a card is being drawn is faster than drawing it twice
             if let Some(reference) = game_state.dragging_card {
                 if let Some(ref mut card) = game_state.get_card_mut(&reference) {
                     card.draw(&mut render_state);

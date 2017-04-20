@@ -1,5 +1,7 @@
 use super::{Card, CardPlayEffect, ResourceType, TARGET_OWNMINION, TARGET_OPPONENTMINION};
 
+/// A generic buff card that gives a minion 1 attack and 1 health
+/// This can be cast on your own minions or the opponent minions
 #[derive(Clone, Copy)]
 pub struct BuffCard {}
 

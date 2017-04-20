@@ -1,5 +1,7 @@
 use super::{Card, ResourceType};
 
+/// A generic minion with no special abilities
+/// It has a name, attack, health and cost and can only be played and attack like normal
 pub struct GenericMinion {
     pub name: String,
     pub attack: u8,

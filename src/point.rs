@@ -1,5 +1,6 @@
 use std::ops;
 
+/// A point that holds an x/y coordinate
 #[derive(Debug, Clone, Copy)]
 pub struct Point {
     pub x: f32,
@@ -13,15 +14,17 @@ impl Point {
     pub fn zero() -> Point {
         Point::new(0f32, 0f32)
     }
+    /// Returns true if the point is between the `min` and the `max` points
     pub fn between(&self, min: &Point, max: &Point) -> bool {
         min.x <= self.x && min.y <= self.y && max.x >= self.x && max.y >= self.y
     }
-
     pub fn to_slice(&self) -> [f32; 2] {
         [self.x, self.y]
     }
 }
 
+// TODO: Implemting all these conversions and ops is a bother. There's probably a library that already does what we want
+// Either that or we can macro a bunch of this away
 impl From<(u32, u32)> for Point {
     fn from(value: (u32, u32)) -> Point {
         Point::new(value.0 as f32, value.1 as f32)
