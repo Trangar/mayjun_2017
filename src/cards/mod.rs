@@ -57,6 +57,7 @@ pub trait Card {
 /// Cards will consume these resources, and they'll recharge the next turn
 /// Leaving the player with the same amount of total resources as they've had turns
 #[derive(Debug, Clone, Copy)]
+#[allow(dead_code)]
 pub enum ResourceType {
     Red,
     Blue,

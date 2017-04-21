@@ -1,6 +1,6 @@
 mod positioning;
 mod player;
-mod iter;
+//mod iter;
 
 pub use self::positioning::{AreaReference, CardReference};
 pub use self::player::Player;
@@ -53,16 +53,16 @@ impl GameState {
         }
     }
 
-    /// Get a card based on the given CardReference
-    /// This will be None if the given `reference.index` is out of range of the list
-    pub fn get_card(&self, reference: &CardReference) -> Option<&CardWrapper> {
-        match reference.area {
-            AreaReference::PlayerHand => self.player.hand.get(reference.index),
-            AreaReference::PlayerField => self.player.field.get(reference.index),
-            AreaReference::OpponentHand => self.opponent.hand.get(reference.index),
-            AreaReference::OpponentField => self.opponent.field.get(reference.index),
-        }
-    }
+    // /// Get a card based on the given CardReference
+    // /// This will be None if the given `reference.index` is out of range of the list
+    // pub fn get_card(&self, reference: &CardReference) -> Option<&CardWrapper> {
+    //     match reference.area {
+    //         AreaReference::PlayerHand => self.player.hand.get(reference.index),
+    //         AreaReference::PlayerField => self.player.field.get(reference.index),
+    //         AreaReference::OpponentHand => self.opponent.hand.get(reference.index),
+    //         AreaReference::OpponentField => self.opponent.field.get(reference.index),
+    //     }
+    // }
 
     /// Get a mutable reference to a card based on the given CardReference
     /// This will be None if the given `reference.index` is out of range of the list
@@ -74,7 +74,7 @@ impl GameState {
             AreaReference::OpponentField => self.opponent.field.get_mut(reference.index),
         }
     }
-
+    
     /// Remove a card at the requested CardReference
     /// This will be None if the given `reference.index` is out of range of the list
     pub fn take_card_at(&mut self, reference: &CardReference) -> Option<CardWrapper> {

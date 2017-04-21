@@ -1,5 +1,6 @@
 use cards::{Card, ResourceType};
 use card_wrapper::CardWrapper;
+use utils::VecUtils;
 
 /// Holds information about a player
 pub struct Player {
@@ -53,16 +54,15 @@ impl Player {
 
     /// Draw a card from the deck and put it in the players hand
     pub fn draw_card(&mut self) {
-        // TODO: Pick a random index
-        let index = 0;
-        let card = self.deck.remove(index);
-        self.hand.push(CardWrapper::new(card));
+        if let Some(card) = self.deck.try_remove(0) {
+            self.hand.push(CardWrapper::new(card));
+        }
     }
 
-    /// Draw a card and immediately play it on the field
-    pub fn draw_and_play_card(&mut self) {
-        let index = 0;
-        let card = self.deck.remove(index);
-        self.field.push(CardWrapper::new(card));
-    }
+    // /// Draw a card and immediately play it on the field
+    // pub fn draw_and_play_card(&mut self) {
+    //     let index = 0;
+    //     let card = self.deck.remove(index);
+    //     self.field.push(CardWrapper::new(card));
+    // }
 }
