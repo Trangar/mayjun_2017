@@ -2,11 +2,11 @@
 name = "rust_card_game"
 version = "0.1.0"
 authors = ["Victor Koenders <victor.koenders@gmail.com>"]
+edition = "2018"
 
 [dependencies]
-glium_text = "*"
-itertools = "*"
-bitflags = "*"
-glium = "*"
-image = "*"
-time = "*"
+glium_text = "0.14"
+itertools = "0.9"
+bitflags = "1.2"
+glium = "0.23"
+image = "0.23"

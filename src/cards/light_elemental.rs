@@ -29,7 +29,7 @@ impl Card for LightElemental {
     fn cost(&self) -> Vec<(ResourceType, u8)> {
         vec![(ResourceType::White, 2)]
     }
-    fn clone_box(&self) -> Box<Card> {
+    fn clone_box(&self) -> Box<dyn Card> {
         Box::new(*self)
     }
 }

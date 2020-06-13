@@ -1,4 +1,3 @@
-
 /// Holds a reference to the different areas on the board that cardwrappers can be positioned at
 /// This corresponds to a specific list of the current game state
 #[derive(Debug, Clone, Copy)]

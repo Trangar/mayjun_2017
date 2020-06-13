@@ -21,14 +21,16 @@ impl<T> VecUtils<T> for Vec<T> {
     }
 
     fn push_or_insert(&mut self, index: usize, value: T) -> bool {
-        if self.len() > index {
-            self.insert(index, value);
-            true
-        } else if self.len() == index {
-            self.push(value);
-            true
-        } else {
-            false
+        match index {
+            x if x < self.len() => {
+                self.insert(index, value);
+                true
+            }
+            x if x == self.len() => {
+                self.push(value);
+                true
+            }
+            _ => false,
         }
     }
 }

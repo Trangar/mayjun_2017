@@ -1,15 +1,15 @@
-mod positioning;
 mod player;
+mod positioning;
 //mod iter;
 
-pub use self::positioning::{AreaReference, CardReference};
 pub use self::player::Player;
+pub use self::positioning::{AreaReference, CardReference};
 
-use constants::{CARD_HEIGHT, CARD_IN_HAND_SPACING, CARD_ON_FIELD_SPACING};
-use card_wrapper::CardWrapper;
-use cards::CardPlayEffect;
-use utils::VecUtils;
-use point::Point;
+use crate::card_wrapper::CardWrapper;
+use crate::cards::CardPlayEffect;
+use crate::constants::{CARD_HEIGHT, CARD_IN_HAND_SPACING, CARD_ON_FIELD_SPACING};
+use crate::point::Point;
+use crate::utils::VecUtils;
 
 /// The state of the current game
 /// This holds both of the players data, as well as all interactions that the player has with the board
@@ -27,9 +27,9 @@ pub struct GameState {
 impl GameState {
     pub fn new(player: Player, opponent: Player) -> GameState {
         GameState {
-            player: player,
-            opponent: opponent,
-            dragging_card: None
+            player,
+            opponent,
+            dragging_card: None,
         }
     }
 
@@ -37,15 +37,17 @@ impl GameState {
     /// They will be positioned in the center of the screen, at y coordinate `position_y`
     /// There will be `spacing` amount of pixels between the middle of the cards, not between the sides
     /// Finally, `screen_size` needs to be passed to calculate the position correctly
-    fn update_positions_of_list(list: &mut Vec<CardWrapper>,
-                                position_y: f32,
-                                spacing: f32,
-                                screen_size: &Point) {
-
+    fn update_positions_of_list(
+        list: &mut Vec<CardWrapper>,
+        position_y: f32,
+        spacing: f32,
+        screen_size: &Point,
+    ) {
         // calculate the position of the left-most card
-        let mut position = Point::new((screen_size.x / 2f32) -
-                                      ((list.len() as f32 * spacing) - spacing) / 2f32,
-                                      position_y);
+        let mut position = Point::new(
+            (screen_size.x / 2f32) - ((list.len() as f32 * spacing) - spacing) / 2f32,
+            position_y,
+        );
 
         for card in list.iter_mut() {
             card.set_position(position);
@@ -74,7 +76,7 @@ impl GameState {
             AreaReference::OpponentField => self.opponent.field.get_mut(reference.index),
         }
     }
-    
+
     /// Remove a card at the requested CardReference
     /// This will be None if the given `reference.index` is out of range of the list
     pub fn take_card_at(&mut self, reference: &CardReference) -> Option<CardWrapper> {
@@ -92,32 +94,40 @@ impl GameState {
     /// this will fail and false will be returned
     pub fn insert_card_at(&mut self, cardwrapper: CardWrapper, reference: &CardReference) -> bool {
         match reference.area {
-            AreaReference::PlayerHand => {
-                self.player.hand.push_or_insert(reference.index, cardwrapper)
-            }
-            AreaReference::PlayerField => {
-                self.player.field.push_or_insert(reference.index, cardwrapper)
-            }
-            AreaReference::OpponentHand => {
-                self.opponent.hand.push_or_insert(reference.index, cardwrapper)
-            }
-            AreaReference::OpponentField => {
-                self.opponent.field.push_or_insert(reference.index, cardwrapper)
-            }
+            AreaReference::PlayerHand => self
+                .player
+                .hand
+                .push_or_insert(reference.index, cardwrapper),
+            AreaReference::PlayerField => self
+                .player
+                .field
+                .push_or_insert(reference.index, cardwrapper),
+            AreaReference::OpponentHand => self
+                .opponent
+                .hand
+                .push_or_insert(reference.index, cardwrapper),
+            AreaReference::OpponentField => self
+                .opponent
+                .field
+                .push_or_insert(reference.index, cardwrapper),
         }
     }
 
-    /// Update the position of all cards. This should be called after a screen resize or a card position change so all cards are 
+    /// Update the position of all cards. This should be called after a screen resize or a card position change so all cards are
     /// rendered at the right position.
     pub fn update_card_origins(&mut self, screen_size: &Point) {
-        GameState::update_positions_of_list(&mut self.player.hand,
-                                            screen_size.y - CARD_HEIGHT / 2f32,
-                                            CARD_IN_HAND_SPACING,
-                                            screen_size);
-        GameState::update_positions_of_list(&mut self.player.field,
-                                            (screen_size.y + CARD_HEIGHT) / 2f32,
-                                            CARD_ON_FIELD_SPACING,
-                                            screen_size);
+        GameState::update_positions_of_list(
+            &mut self.player.hand,
+            screen_size.y - CARD_HEIGHT / 2f32,
+            CARD_IN_HAND_SPACING,
+            screen_size,
+        );
+        GameState::update_positions_of_list(
+            &mut self.player.field,
+            (screen_size.y + CARD_HEIGHT) / 2f32,
+            CARD_ON_FIELD_SPACING,
+            screen_size,
+        );
     }
 
     /// Move the mouse to a given position.
@@ -137,22 +147,27 @@ impl GameState {
     fn get_card_drag_result(wrapper: &CardWrapper, area: &AreaReference) -> Option<CardPlayEffect> {
         for effect in wrapper.card.play_effects() {
             match (effect, area) {
-                (CardPlayEffect::SummonMinion, &AreaReference::PlayerHand) => return Some(CardPlayEffect::SummonMinion),
-                (CardPlayEffect::SummonMinion, _) => {},
-                (x, _) => return Some(x)
+                (CardPlayEffect::SummonMinion, &AreaReference::PlayerHand) => {
+                    return Some(CardPlayEffect::SummonMinion)
+                }
+                (CardPlayEffect::SummonMinion, _) => {}
+                (x, _) => return Some(x),
             }
         }
         None
     }
 
     /// Detects if the mouse is currently over a card
-    /// If it is, and the card can be dragged, it'll make this card drag and 
+    /// If it is, and the card can be dragged, it'll make this card drag and
     /// follow the mouse position on subsequential `mouse_moved_to` calls
     pub fn mouse_pressed_at(&mut self, mouse_position: &Point) {
         // Make a list of card lists and the position the card is at
         let mut lists = [
             (&mut self.player.hand.iter_mut(), AreaReference::PlayerHand),
-            (&mut self.player.field.iter_mut(), AreaReference::PlayerField)
+            (
+                &mut self.player.field.iter_mut(),
+                AreaReference::PlayerField,
+            ),
         ];
         for &mut (ref mut list, area) in &mut lists {
             let length = list.len();
@@ -160,17 +175,17 @@ impl GameState {
             for (index, ref mut card) in list.rev().enumerate() {
                 if card.contains(mouse_position) {
                     let position = CardReference {
-                        area: area,
-                        index: length - index - 1 // because we're iterating from the end, we need to correct the card index
+                        area,
+                        index: length - index - 1, // because we're iterating from the end, we need to correct the card index
                     };
                     match GameState::get_card_drag_result(&card, &area) {
-                        None => {},
+                        None => {}
                         Some(CardPlayEffect::SummonMinion) => {
                             // if we can play this card, make it draggable and return
                             card.drag_start(mouse_position);
                             self.dragging_card = Some(position);
                             return;
-                        },
+                        }
                         Some(CardPlayEffect::Target(target)) => {
                             // if we can target something, show a targetting cursor
                             println!("Card play effect is target {:?}", target);
@@ -205,10 +220,10 @@ impl GameState {
         } else {
             // TODO: Implement the other areas
             // Especially the opponent field for targetting attacks with minions
-            println!("Y factor: {:?} ({:?} / {:?})",
-                     y_factor,
-                     point.y,
-                     screen_size.y);
+            println!(
+                "Y factor: {:?} ({:?} / {:?})",
+                y_factor, point.y, screen_size.y
+            );
             None
         }
     }
@@ -216,9 +231,11 @@ impl GameState {
     /// Play a card from hand. This moves a card from the given `start_position` to the `target_position`
     /// This does not technically have to be a `_from_hand` function, as this will move the cards from anywhere to anywhere
     /// As long as the `start_position` and `target_position` are valid
-    fn play_card_from_hand(&mut self,
-                           start_position: &CardReference,
-                           target_position: &CardReference) {
+    fn play_card_from_hand(
+        &mut self,
+        start_position: &CardReference,
+        target_position: &CardReference,
+    ) {
         if let Some(cardwrapper) = self.take_card_at(start_position) {
             if !self.insert_card_at(cardwrapper, target_position) {
                 println!("Could not insert card at {:?}", target_position);

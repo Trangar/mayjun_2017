@@ -1,14 +1,14 @@
 pub use std::rc::{Rc, Weak};
 
-mod light_elemental;
+mod buff_card;
 mod generic_minion;
 mod generic_spell;
-mod buff_card;
+mod light_elemental;
 
-pub use self::light_elemental::*;
+pub use self::buff_card::*;
 pub use self::generic_minion::*;
 pub use self::generic_spell::*;
-pub use self::buff_card::*;
+pub use self::light_elemental::*;
 
 /// The basic card trait
 /// This is the "contract" that binds card implementations to the system
@@ -48,7 +48,7 @@ pub trait Card {
         self.name().to_string()
     }
     /// Clone this object into a boxed copy of itself
-    fn clone_box(&self) -> Box<Card>;
+    fn clone_box(&self) -> Box<dyn Card>;
 }
 
 /// The resource type that the game has
@@ -74,13 +74,13 @@ pub enum CardPlayEffect {
     Target(TargetType),
 }
 
-bitflags! {
+bitflags::bitflags! {
     /// Flags that are used to indicate what a card can target. These values can be or'd together to form combinations.
-    pub flags TargetType: u8 {
-        const TARGET_SELF           = 0b0001,
-        const TARGET_OPPONENT       = 0b0010,
-        const TARGET_OWNMINION      = 0b0100,
-        const TARGET_OPPONENTMINION = 0b1000,
-        const TARGET_EVERYTHING     = TARGET_SELF.bits | TARGET_OPPONENT.bits | TARGET_OWNMINION.bits | TARGET_OPPONENTMINION.bits
+    pub struct TargetType: u8 {
+        const TARGET_SELF           = 0b0001;
+        const TARGET_OPPONENT       = 0b0010;
+        const TARGET_OWNMINION      = 0b0100;
+        const TARGET_OPPONENTMINION = 0b1000;
+        const TARGET_EVERYTHING     = Self::TARGET_SELF.bits | Self::TARGET_OPPONENT.bits | Self::TARGET_OWNMINION.bits | Self::TARGET_OPPONENTMINION.bits;
     }
 }

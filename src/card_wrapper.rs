@@ -1,16 +1,17 @@
-use constants::{BOUNCE_BACK_FACTOR, CARD_WIDTH, CARD_HEIGHT};
-use glium::{Blend, DrawParameters, Surface, Rect};
+use crate::cards::Card;
+use crate::constants::{BOUNCE_BACK_FACTOR, CARD_HEIGHT, CARD_WIDTH};
+use crate::point::Point;
+use crate::render_state::RenderState;
 use glium::framebuffer::SimpleFrameBuffer;
-use glium_text::{self, TextDisplay};
 use glium::texture::Texture2d;
-use render_state::RenderState;
-use point::Point;
-use cards::Card;
+use glium::uniform;
+use glium::{Blend, DrawParameters, Rect, Surface};
+use glium_text::{self, TextDisplay};
 
 /// Holds a card at a specific position on the screen
 /// Also contains the card's texture
 pub struct CardWrapper {
-    /// The position that the card is currently at 
+    /// The position that the card is currently at
     current_position: Point,
 
     /// The snap-back position that the card is supposed to be at
@@ -29,12 +30,12 @@ pub struct CardWrapper {
     pub texture: Option<Texture2d>,
 
     /// A reference to the card that this cardwrapper is holding
-    pub card: Box<Card>,
+    pub card: Box<dyn Card>,
 }
 
 impl CardWrapper {
     /// Create a new card wrapper at 0/0 for the given card
-    pub fn new(card: Box<Card>) -> CardWrapper {
+    pub fn new(card: Box<dyn Card>) -> CardWrapper {
         CardWrapper {
             position: Point::zero(),
             current_position: Point::zero(),
@@ -42,7 +43,7 @@ impl CardWrapper {
             dragging: false,
             drag_offset: Point::zero(),
             texture: None,
-            card: card,
+            card,
         }
     }
 
@@ -61,8 +62,10 @@ impl CardWrapper {
     /// Returns true if the given point is within this cards dimensions
     pub fn contains(&self, p: &Point) -> bool {
         let half_size = self.size() / 2f32;
-        p.between(&(self.position - half_size),
-                  &(self.current_position + half_size))
+        p.between(
+            &(self.position - half_size),
+            &(self.current_position + half_size),
+        )
     }
 
     /// Make the card draggable based on the given mouse position
@@ -77,7 +80,10 @@ impl CardWrapper {
 
     /// Update the current position based on the mouse position
     pub fn mouse_moved(&mut self, mouse_position: &Point) {
-        debug_assert!(self.dragging, "Card is being moved when it's not being dragged");
+        debug_assert!(
+            self.dragging,
+            "Card is being moved when it's not being dragged"
+        );
         self.current_position = self.drag_offset + *mouse_position;
     }
 
@@ -98,43 +104,54 @@ impl CardWrapper {
             let mut frame_buffer: SimpleFrameBuffer =
                 SimpleFrameBuffer::new(render_state.window, &texture).unwrap();
             frame_buffer.clear_color(0.0, 0.0, 0.0, 1.0);
-            frame_buffer.clear(Some(&Rect {
-                                         left: 1,
-                                         bottom: 1,
-                                         width: CARD_WIDTH as u32 - 2,
-                                         height: CARD_HEIGHT as u32 - 2,
-                                     }),
-                               Some((1.0, 1.0, 1.0, 1.0)),
-                               false,
-                               None,
-                               None);
+            frame_buffer.clear(
+                Some(&Rect {
+                    left: 1,
+                    bottom: 1,
+                    width: CARD_WIDTH as u32 - 2,
+                    height: CARD_HEIGHT as u32 - 2,
+                }),
+                Some((1.0, 1.0, 1.0, 1.0)),
+                false,
+                None,
+                None,
+            );
 
             // TODO: Properly calculate the positions and size of the font
-            let text = TextDisplay::new(render_state.text_system,
-                                        render_state.font,
-                                        self.card.name());
-            let matrix = [[0.1, 0.0, 0.0, 0.0],
-                          [0.0, 0.075, 0.0, 0.0],
-                          [0.0, 0.0, 0.1, 0.0],
-                          [-0.95, 0.9, 0.0, 1.0]];
-            glium_text::draw(&text,
-                             render_state.text_system,
-                             &mut frame_buffer,
-                             matrix,
-                             (0.0, 0.0, 0.0, 1.0));
+            let text = TextDisplay::new(
+                render_state.text_system,
+                render_state.font,
+                self.card.name(),
+            );
+            let matrix = [
+                [0.1, 0.0, 0.0, 0.0],
+                [0.0, 0.075, 0.0, 0.0],
+                [0.0, 0.0, 0.1, 0.0],
+                [-0.95, 0.9, 0.0, 1.0],
+            ];
+            glium_text::draw(
+                &text,
+                render_state.text_system,
+                &mut frame_buffer,
+                matrix,
+                (0.0, 0.0, 0.0, 1.0),
+            );
             let mut y = 0.7;
             for line in self.card.description().lines() {
-
                 let text = TextDisplay::new(render_state.text_system, render_state.font, line);
-                let matrix = [[0.1, 0.0, 0.0, 0.0],
-                              [0.0, 0.075, 0.0, 0.0],
-                              [0.0, 0.0, 0.1, 0.0],
-                              [-0.95, y, 0.0, 1.0]];
-                glium_text::draw(&text,
-                                 render_state.text_system,
-                                 &mut frame_buffer,
-                                 matrix,
-                                 (0.0, 0.0, 0.0, 1.0));
+                let matrix = [
+                    [0.1, 0.0, 0.0, 0.0],
+                    [0.0, 0.075, 0.0, 0.0],
+                    [0.0, 0.0, 0.1, 0.0],
+                    [-0.95, y, 0.0, 1.0],
+                ];
+                glium_text::draw(
+                    &text,
+                    render_state.text_system,
+                    &mut frame_buffer,
+                    matrix,
+                    (0.0, 0.0, 0.0, 1.0),
+                );
                 y -= 0.1;
             }
         }
@@ -156,12 +173,18 @@ impl CardWrapper {
                 offset: (self.current_position - half_size).to_slice(),
                 tex: texture,
             };
-            render_state.frame
-                .draw(render_state.vertex_buffer,
-                      render_state.indices,
-                      render_state.program,
-                      &uniforms,
-                      &DrawParameters { blend: Blend::alpha_blending(), ..Default::default() })
+            render_state
+                .frame
+                .draw(
+                    render_state.vertex_buffer,
+                    render_state.indices,
+                    render_state.program,
+                    &uniforms,
+                    &DrawParameters {
+                        blend: Blend::alpha_blending(),
+                        ..Default::default()
+                    },
+                )
                 .unwrap();
         }
     }
