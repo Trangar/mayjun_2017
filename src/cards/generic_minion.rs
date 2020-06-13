@@ -28,12 +28,12 @@ impl Card for GenericMinion {
     fn cost(&self) -> Vec<(ResourceType, u8)> {
         self.cost.clone()
     }
-    fn clone_box(&self) -> Box<Card> {
+    fn clone_box(&self) -> Box<dyn Card> {
         Box::new(GenericMinion {
-                     name: self.name.clone(),
-                     attack: self.attack,
-                     health: self.health,
-                     cost: self.cost.clone(),
-                 })
+            name: self.name.clone(),
+            attack: self.attack,
+            health: self.health,
+            cost: self.cost.clone(),
+        })
     }
 }

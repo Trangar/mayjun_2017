@@ -1,9 +1,11 @@
-use glium::{Display, Frame, Program, VertexBuffer};
-use glium::index::{NoIndices, PrimitiveType};
-use glium_text::{TextSystem, FontTexture};
-use constants::{CARD_WIDTH, CARD_HEIGHT};
+#![allow(deprecated)]
+
+use crate::constants::{CARD_HEIGHT, CARD_WIDTH};
+use crate::point::Point;
 use glium::backend::Facade;
-use point::Point;
+use glium::index::{NoIndices, PrimitiveType};
+use glium::{implement_vertex, Display, Frame, Program, VertexBuffer};
+use glium_text::{FontTexture, TextSystem};
 
 /// Holds all the parts that cards might need when they're being rendered to the screen
 pub struct RenderState<'a> {
@@ -20,8 +22,7 @@ pub struct RenderState<'a> {
 impl<'a> RenderState<'a> {
     /// Generate a vertex and indexbuffer that the cards will use
     /// Because all cards are the same dimensions this only has to generate once
-    pub fn generate_buffers(display: &Facade) -> (VertexBuffer<Vertex>, NoIndices) {
-
+    pub fn generate_buffers(display: &dyn Facade) -> (VertexBuffer<Vertex>, NoIndices) {
         let vertex1 = Vertex {
             // bottom left
             position: [0.0, CARD_HEIGHT],

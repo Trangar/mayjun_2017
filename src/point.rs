@@ -9,7 +9,7 @@ pub struct Point {
 
 impl Point {
     pub fn new(x: f32, y: f32) -> Point {
-        Point { x: x, y: y }
+        Point { x, y }
     }
     pub fn zero() -> Point {
         Point::new(0f32, 0f32)
@@ -40,6 +40,12 @@ impl From<(i32, i32)> for Point {
 impl From<(f32, f32)> for Point {
     fn from(value: (f32, f32)) -> Point {
         Point::new(value.0, value.1)
+    }
+}
+
+impl From<(f64, f64)> for Point {
+    fn from(value: (f64, f64)) -> Point {
+        Point::new(value.0 as _, value.1 as _)
     }
 }
 

@@ -1,6 +1,6 @@
-use cards::{Card, ResourceType};
-use card_wrapper::CardWrapper;
-use utils::VecUtils;
+use crate::card_wrapper::CardWrapper;
+use crate::cards::{Card, ResourceType};
+use crate::utils::VecUtils;
 
 /// Holds information about a player
 pub struct Player {
@@ -10,10 +10,10 @@ pub struct Player {
 
     /// Hold the cards that were in the deck when the game started
     /// This should not change
-    pub original_deck: Vec<Box<Card>>,
+    pub original_deck: Vec<Box<dyn Card>>,
 
     /// Holds the cards that are not drawn from the deck
-    pub deck: Vec<Box<Card>>,
+    pub deck: Vec<Box<dyn Card>>,
 
     /// Holds the cards that are currently in the players hand
     pub hand: Vec<CardWrapper>,
