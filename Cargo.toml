@@ -6,7 +6,7 @@ edition = "2018"
 
 [dependencies]
 glium_text = "0.14"
-itertools = "0.9"
+itertools = "0.10"
 bitflags = "1.2"
 glium = "0.23"
 image = "0.23"
